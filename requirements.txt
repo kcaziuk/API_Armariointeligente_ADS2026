@@ -1,0 +1,12 @@
+# Versões escolhidas para funcionar em Python 3.6+ (FastAPI 0.83 é a última com suporte ao 3.6)
+fastapi==0.83.0
+anyio>=3.4,<4
+uvicorn==0.16.0
+pydantic>=1.8,<2.0
+SQLAlchemy>=1.4,<2.0
+python-dotenv>=0.19,<0.21
+PyJWT>=2.3,<2.5
+python-multipart==0.0.5
+# apenas para testes
+requests
+pytest
