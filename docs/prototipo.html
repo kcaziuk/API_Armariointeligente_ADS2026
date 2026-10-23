@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Armário Inteligente — Protótipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TOKENS — mesma base do plano (Passo 6.2), ampliada
+   ========================================================= */
+:root {
+  --fundo: #f6f3ef;
+  --cartao: #ffffff;
+  --cartao-2: #fbf9f6;
+  --texto: #2b2b2b;
+  --texto-suave: #6b6560;
+  --destaque: #7a4fa0;
+  --destaque-forte: #633d85;
+  --destaque-suave: #f1eaf7;
+  --perigo: #b3261e;
+  --perigo-suave: #fbeceb;
+  --sucesso: #2e7d4f;
+  --sucesso-suave: #e7f4ec;
+  --alerta: #8a5a00;
+  --alerta-suave: #fdf3e1;
+  --borda: #e2ddd6;
+  --frio: #3b6ea8;   --frio-suave: #e6eef8;
+  --ameno: #5a7a36;  --ameno-suave: #edf3e4;
+  --quente: #c2562b; --quente-suave: #fbeae2;
+  --raio: 12px;
+  --raio-p: 8px;
+  --sombra: 0 1px 2px rgba(43,43,43,.05), 0 6px 20px rgba(43,43,43,.06);
+  --fonte-titulo: "Fraunces", Georgia, serif;
+  --fonte: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fundo: #1c1a1e; --cartao: #26232a; --cartao-2: #2c2930; --texto: #ece8f0; --texto-suave: #a9a2b0;
+    --destaque: #b28ad6; --destaque-forte: #c7a5e6; --destaque-suave: #3a2f46;
+    --perigo: #f08a82; --perigo-suave: #452726; --sucesso: #7fcb9c; --sucesso-suave: #233a2c;
+    --alerta: #f0c069; --alerta-suave: #3f3320; --borda: #3b3640;
+    --frio: #8db6e6; --frio-suave: #24303f; --ameno: #a9c77f; --ameno-suave: #2a3322;
+    --quente: #f0a07c; --quente-suave: #42291f;
+    --sombra: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fundo: #1c1a1e; --cartao: #26232a; --cartao-2: #2c2930; --texto: #ece8f0; --texto-suave: #a9a2b0;
+  --destaque: #b28ad6; --destaque-forte: #c7a5e6; --destaque-suave: #3a2f46;
+  --perigo: #f08a82; --perigo-suave: #452726; --sucesso: #7fcb9c; --sucesso-suave: #233a2c;
+  --alerta: #f0c069; --alerta-suave: #3f3320; --borda: #3b3640;
+  --frio: #8db6e6; --frio-suave: #24303f; --ameno: #a9c77f; --ameno-suave: #2a3322;
+  --quente: #f0a07c; --quente-suave: #42291f;
+  --sombra: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--fonte);
+  font-size: 15px;
+  line-height: 1.5;
+  background: var(--fundo);
+  color: var(--texto);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--fonte-titulo); font-weight: 600; line-height: 1.2; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(26px, 4vw, 34px); }
+h2 { font-size: 21px; }
+h3 { font-size: 17px; }
+p { margin: 0; }
+[hidden] { display: none !important; }
+.suave { color: var(--texto-suave); }
+.pequeno { font-size: 13px; }
+svg { flex-shrink: 0; }
+
+/* ---------- Botões e campos ---------- */
+button, input, select, textarea { font: inherit; color: inherit; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 16px; border-radius: var(--raio-p); border: 1px solid transparent;
+  background: var(--destaque); color: #fff; font-weight: 600; cursor: pointer;
+  transition: background .15s, border-color .15s, transform .05s;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] .btn:not(.secundario):not(.fantasma):not(.perigo-contorno) { color: #1c1a1e; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn:not(.secundario):not(.fantasma):not(.perigo-contorno) { color: #1c1a1e; } }
+.btn:hover { background: var(--destaque-forte); }
+.btn:active { transform: translateY(1px); }
+.btn.secundario { background: transparent; color: var(--destaque); border-color: var(--destaque); }
+.btn.secundario:hover { background: var(--destaque-suave); }
+.btn.fantasma { background: transparent; color: var(--texto-suave); }
+.btn.fantasma:hover { background: var(--cartao-2); color: var(--texto); }
+.btn.perigo { background: var(--perigo); }
+.btn.perigo:hover { filter: brightness(.92); background: var(--perigo); }
+.btn.perigo-contorno { background: transparent; color: var(--perigo); border-color: transparent; }
+.btn.perigo-contorno:hover { background: var(--perigo-suave); }
+.btn.pequeno { padding: 6px 10px; font-size: 13px; }
+.btn.icone { padding: 7px; }
+.btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .chip:focus-visible, .nav-link:focus-visible {
+  outline: 2px solid var(--destaque); outline-offset: 2px;
+}
+
+.campo { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
+.campo .dica { font-weight: 400; font-size: 12px; color: var(--texto-suave); }
+.campo input, .campo select, .campo textarea {
+  padding: 9px 12px; border-radius: var(--raio-p); border: 1px solid var(--borda);
+  background: var(--cartao); font-weight: 400; width: 100%;
+}
+.campo textarea { resize: vertical; min-height: 72px; }
+.campo.com-erro input, .campo.com-erro select, .campo.com-erro textarea { border-color: var(--perigo); }
+.erro-campo { color: var(--perigo); font-size: 12px; font-weight: 500; min-height: 0; }
+.check { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--destaque); }
+
+/* ---------- Chips / badges ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1px solid var(--borda); background: var(--cartao); color: var(--texto);
+  padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 14px; font-weight: 500;
+}
+.chip:hover { border-color: var(--destaque); }
+.chip[aria-pressed="true"] { background: var(--destaque); border-color: var(--destaque); color: #fff; }
+:root[data-theme="dark"] .chip[aria-pressed="true"] { color: #1c1a1e; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip[aria-pressed="true"] { color: #1c1a1e; } }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; background: var(--cartao-2); color: var(--texto-suave); border: 1px solid var(--borda);
+}
+.badge.limpa { background: var(--sucesso-suave); color: var(--sucesso); border-color: transparent; }
+.badge.suja { background: var(--alerta-suave); color: var(--alerta); border-color: transparent; }
+.badge.manutencao { background: var(--perigo-suave); color: var(--perigo); border-color: transparent; }
+.badge.frio { background: var(--frio-suave); color: var(--frio); border-color: transparent; }
+.badge.ameno { background: var(--ameno-suave); color: var(--ameno); border-color: transparent; }
+.badge.quente { background: var(--quente-suave); color: var(--quente); border-color: transparent; }
+.ponto { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.amostra {
+  width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); display: inline-block; flex-shrink: 0;
+}
+.amostra.desconhecida { background: repeating-linear-gradient(45deg, #ccc 0 3px, #eee 3px 6px); }
+
+/* ---------- Estrutura ---------- */
+.cartao {
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
+  padding: 24px; box-shadow: var(--sombra);
+}
+main.conteudo { max-width: 1080px; margin: 0 auto; padding: 28px 16px 120px; }
+.cabecalho-tela { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.cabecalho-tela p { margin-top: 6px; }
+
+/* ---------- Menu (Passo 6.5) ---------- */
+.menu {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 24px; background: color-mix(in srgb, var(--cartao) 92%, transparent);
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--borda);
+}
+.marca { display: flex; align-items: center; gap: 10px; font-family: var(--fonte-titulo); font-weight: 600; font-size: 18px; margin-right: 16px; color: var(--texto); text-decoration: none; }
+.marca-icone { width: 34px; height: 34px; border-radius: 10px; background: var(--destaque); color: #fff; display: grid; place-items: center; }
+.nav { display: flex; gap: 4px; }
+.nav-link {
+  border: 0; background: transparent; padding: 8px 14px; border-radius: var(--raio-p);
+  color: var(--texto-suave); font-weight: 600; cursor: pointer; display: inline-flex; gap: 8px; align-items: center;
+}
+.nav-link:hover { background: var(--cartao-2); color: var(--texto); }
+.nav-link[aria-current="page"] { background: var(--destaque-suave); color: var(--destaque); }
+.menu-direita { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--destaque-suave); color: var(--destaque);
+  display: grid; place-items: center; font-weight: 700; border: 0; cursor: pointer;
+}
+.cidade-menu { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--texto-suave); padding: 6px 10px; border-radius: 999px; border: 1px solid var(--borda); background: transparent; cursor: pointer; }
+.cidade-menu:hover { border-color: var(--destaque); color: var(--texto); }
+
+@media (max-width: 760px) {
+  .menu { flex-wrap: wrap; padding: 10px 16px; }
+  .marca { margin-right: 0; }
+  .marca > span:last-child { display: none; }
+  .nav { order: 3; width: 100%; justify-content: space-between; }
+  .nav-link { flex: 1; justify-content: center; padding: 8px 6px; font-size: 14px; }
+  .cidade-menu { display: none; }
+}
+
+/* ---------- Tela Entrar ---------- */
+.tela-entrar { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+.entrar-arte {
+  background: var(--destaque); color: #fff; padding: 48px; display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden;
+}
+:root[data-theme="dark"] .entrar-arte { background: #3a2f46; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .entrar-arte { background: #3a2f46; } }
+.entrar-arte h1 { font-size: clamp(32px, 4.5vw, 52px); max-width: 12ch; }
+.entrar-arte p { opacity: .85; max-width: 38ch; margin-top: 16px; font-size: 16px; }
+.arara { position: absolute; right: -20px; bottom: 60px; width: min(70%, 420px); opacity: .95; }
+.entrar-passos { display: grid; gap: 14px; position: relative; z-index: 1; }
+.entrar-passos div { display: flex; gap: 12px; align-items: center; font-weight: 500; }
+.entrar-passos b { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 13px; }
+.entrar-form { display: grid; place-items: center; padding: 32px 16px; }
+.entrar-cartao { width: 100%; max-width: 420px; }
+.abas { display: grid; grid-template-columns: 1fr 1fr; background: var(--cartao-2); border: 1px solid var(--borda); border-radius: var(--raio-p); padding: 4px; margin: 20px 0 24px; }
+.aba { border: 0; background: transparent; padding: 8px; border-radius: 6px; font-weight: 600; color: var(--texto-suave); cursor: pointer; }
+.aba[aria-selected="true"] { background: var(--cartao); color: var(--texto); box-shadow: var(--sombra); }
+.form-grade { display: grid; gap: 14px; }
+.mensagem { font-size: 14px; padding: 10px 12px; border-radius: var(--raio-p); }
+.mensagem.erro { background: var(--perigo-suave); color: var(--perigo); }
+.mensagem.ok { background: var(--sucesso-suave); color: var(--sucesso); }
+@media (max-width: 860px) {
+  .tela-entrar { grid-template-columns: 1fr; }
+  .entrar-arte { padding: 32px 20px; min-height: 260px; }
+  .arara { width: 46%; bottom: 10px; right: -10px; opacity: .5; }
+  .entrar-passos { display: none; }
+}
+
+/* ---------- Tela Hoje ---------- */
+.hoje-topo { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); gap: 20px; margin-bottom: 32px; }
+.clima-cartao { position: relative; overflow: hidden; padding: 28px; border: 0; }
+.clima-cartao.frio { background: linear-gradient(135deg, var(--frio-suave), var(--cartao)); }
+.clima-cartao.ameno { background: linear-gradient(135deg, var(--ameno-suave), var(--cartao)); }
+.clima-cartao.quente { background: linear-gradient(135deg, var(--quente-suave), var(--cartao)); }
+.clima-linha { display: flex; align-items: center; gap: 20px; margin-top: 12px; }
+.clima-temp { font-family: var(--fonte-titulo); font-size: 64px; font-weight: 500; line-height: 1; letter-spacing: -.03em; }
+.clima-icone { width: 72px; height: 72px; }
+.clima-cartao.frio .clima-icone { color: var(--frio); }
+.clima-cartao.ameno .clima-icone { color: var(--ameno); }
+.clima-cartao.quente .clima-icone { color: var(--quente); }
+.clima-dados { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.clima-cidade { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.clima-frase { margin-top: 14px; font-size: 15px; }
+.controles { display: grid; gap: 18px; align-content: start; }
+.controles .rotulo { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: block; }
+.linha-cidade { display: flex; gap: 8px; }
+.linha-cidade input { flex: 1; padding: 9px 12px; border-radius: var(--raio-p); border: 1px solid var(--borda); background: var(--cartao); min-width: 0; }
+
+.look-cabecalho { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.look-grade { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+@media (max-width: 980px) { .look-grade { grid-template-columns: repeat(3, 1fr); } .hoje-topo { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 560px) { .look-grade { grid-template-columns: repeat(2, minmax(0,1fr)); } .clima-temp { font-size: 52px; } }
+.slot {
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px;
+  display: flex; flex-direction: column; gap: 10px; min-height: 210px; box-shadow: var(--sombra);
+  animation: surgir .35s ease both;
+}
+.slot-parte { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--texto-suave); }
+.slot-visual { flex: 1; border-radius: var(--raio-p); display: grid; place-items: center; min-height: 92px; position: relative; }
+.slot-visual svg { width: 52px; height: 52px; }
+.slot-nome { font-weight: 600; line-height: 1.3; }
+.slot-meta { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--texto-suave); }
+.slot.vazio { background: transparent; border: 1.5px dashed var(--borda); box-shadow: none; }
+.slot.vazio .slot-visual { color: var(--texto-suave); opacity: .55; }
+.slot.vazio .slot-nome { font-weight: 500; color: var(--texto-suave); font-size: 14px; }
+.slot.dispensado { background: transparent; border: 1px solid var(--borda); box-shadow: none; opacity: .7; }
+.slot-visual .chuva-tag svg, .peca-visual .chuva-tag svg { width: 10px; height: 10px; }
+.chuva-tag { position: absolute; top: 8px; right: 8px; background: var(--cartao); border-radius: 999px; padding: 3px 7px; font-size: 11px; font-weight: 600; color: var(--frio); display: flex; gap: 4px; align-items: center; }
+@keyframes surgir { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.slot:nth-child(2) { animation-delay: .05s; } .slot:nth-child(3) { animation-delay: .1s; } .slot:nth-child(4) { animation-delay: .15s; } .slot:nth-child(5) { animation-delay: .2s; }
+
+.avisos { margin-top: 18px; display: grid; gap: 8px; padding: 0; list-style: none; }
+.avisos li { display: flex; gap: 10px; align-items: flex-start; background: var(--alerta-suave); color: var(--alerta); padding: 10px 14px; border-radius: var(--raio-p); font-size: 14px; font-weight: 500; }
+.avisos li a { color: inherit; font-weight: 700; margin-left: auto; white-space: nowrap; cursor: pointer; text-decoration: underline; }
+
+.estado-tela { text-align: center; padding: 48px 24px; display: grid; justify-items: center; gap: 12px; }
+.estado-tela svg { width: 48px; height: 48px; color: var(--texto-suave); }
+.estado-tela.erro svg { color: var(--perigo); }
+.esqueleto { background: linear-gradient(90deg, var(--cartao-2) 25%, var(--borda) 50%, var(--cartao-2) 75%); background-size: 200% 100%; animation: brilho 1.2s infinite; border-radius: var(--raio-p); }
+@keyframes brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ---------- Tela Meu armário ---------- */
+.barra-filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 16px; margin-bottom: 16px; }
+.barra-filtros .campo { font-size: 12px; min-width: 130px; flex: 1; }
+.barra-filtros .campo select, .barra-filtros .campo input { padding: 7px 10px; }
+.segmentado { display: inline-flex; background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio-p); padding: 3px; gap: 2px; }
+.segmentado button { border: 0; background: transparent; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 14px; color: var(--texto-suave); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.segmentado button[aria-pressed="true"] { background: var(--destaque-suave); color: var(--destaque); }
+.contador { font-size: 12px; background: var(--cartao-2); border-radius: 999px; padding: 0 7px; }
+.barra-vista { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+.cartao-peca {
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio); overflow: hidden;
+  display: flex; flex-direction: column; box-shadow: var(--sombra); transition: transform .15s, box-shadow .15s;
+}
+.cartao-peca:hover { transform: translateY(-2px); }
+.peca-visual { height: 110px; display: grid; place-items: center; position: relative; }
+.peca-visual svg { width: 48px; height: 48px; }
+.peca-visual .badge { position: absolute; top: 10px; left: 10px; }
+.peca-visual .chuva-tag { top: 10px; right: 10px; }
+.peca-corpo { padding: 14px 16px; display: grid; gap: 8px; flex: 1; align-content: start; }
+.peca-nome { font-weight: 600; font-size: 15px; }
+.peca-linha { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--texto-suave); flex-wrap: wrap; }
+.peca-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.peca-obs { font-size: 13px; color: var(--texto-suave); font-style: italic; }
+.peca-acoes { display: flex; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--borda); background: var(--cartao-2); }
+.peca-acoes .btn:first-child { flex: 1; }
+
+.grupo { margin-bottom: 28px; }
+.grupo-titulo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-weight: 600; text-transform: capitalize; }
+
+.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tabela th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--texto-suave); padding: 10px 14px; border-bottom: 1px solid var(--borda); font-weight: 600; }
+.tabela td { padding: 12px 14px; border-bottom: 1px solid var(--borda); vertical-align: middle; }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela-envolve { overflow-x: auto; padding: 0; }
+.nome-com-amostra { display: flex; gap: 8px; align-items: center; font-weight: 500; }
+
+/* ---------- Tela Closets ---------- */
+.grade-closets { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+.cartao-closet { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+.closet-mosaico { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.closet-mosaico div { aspect-ratio: 1; border-radius: var(--raio-p); display: grid; place-items: center; }
+.closet-mosaico svg { width: 22px; height: 22px; }
+.closet-pecas { display: flex; flex-wrap: wrap; gap: 6px; }
+.closet-pecas > span { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; padding: 3px 10px 3px 6px; border-radius: 999px; background: var(--cartao-2); border: 1px solid var(--borda); }
+.closet-rodape { display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid var(--borda); padding-top: 12px; margin-top: auto; }
+.lista-check { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; max-height: 260px; overflow: auto; padding: 2px; }
+.lista-check label { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--borda); border-radius: var(--raio-p); cursor: pointer; font-size: 14px; }
+.lista-check label:has(input:checked) { border-color: var(--destaque); background: var(--destaque-suave); }
+.lista-check input { accent-color: var(--destaque); }
+
+/* ---------- Modais ---------- */
+dialog {
+  border: 0; border-radius: 16px; padding: 0; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px);
+  background: var(--cartao); color: var(--texto); box-shadow: 0 24px 64px rgba(0,0,0,.25);
+}
+dialog::backdrop { background: rgba(28, 22, 34, .45); backdrop-filter: blur(2px); }
+dialog[open] { animation: surgir .2s ease; }
+.modal-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 22px 24px 0; }
+.modal-corpo { padding: 18px 24px; display: grid; gap: 14px; }
+.modal-rodape { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 24px 22px; }
+.duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 520px) { .duas-colunas { grid-template-columns: 1fr; } }
+
+/* ---------- Toast ---------- */
+.toasts { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); display: grid; gap: 8px; z-index: 100; pointer-events: none; }
+.toast { background: var(--texto); color: var(--fundo); padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; box-shadow: var(--sombra); animation: surgir .2s ease; display: flex; gap: 8px; align-items: center; }
+
+/* ---------- Painel do protótipo ---------- */
+.painel-proto {
+  position: fixed; right: 16px; bottom: 16px; z-index: 90; width: 290px;
+  background: #1f1b24; color: #ece8f0; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.3); font-size: 13px;
+}
+.painel-proto summary { list-style: none; cursor: pointer; padding: 12px 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.painel-proto summary::-webkit-details-marker { display: none; }
+.painel-proto summary .seta { margin-left: auto; transition: transform .2s; }
+.painel-proto[open] summary .seta { transform: rotate(180deg); }
+.painel-corpo { padding: 0 16px 16px; display: grid; gap: 12px; }
+.painel-corpo label { display: grid; gap: 4px; color: #a9a2b0; font-size: 12px; min-width: 0; }
+.painel-corpo select { width: 100%; min-width: 0; background: #2c2930; color: #ece8f0; border: 1px solid #3b3640; border-radius: 6px; padding: 6px 8px; font-size: 13px; }
+.painel-corpo .check { color: #ece8f0; font-size: 13px; display: flex; }
+.painel-proto .tag-proto { font-size: 10px; background: #b28ad6; color: #1f1b24; padding: 1px 6px; border-radius: 4px; font-weight: 700; letter-spacing: .05em; }
+@media (max-width: 560px) { .painel-proto { width: calc(100vw - 32px); } }
+
+/* Anotações da API (liga/desliga pelo painel) */
+body.anotar [data-api] { position: relative; outline: 1.5px dashed #b28ad6; outline-offset: 3px; }
+body.anotar [data-api]::after {
+  content: attr(data-api); position: absolute; top: 4px; right: 4px; z-index: 5; max-width: calc(100% - 8px); overflow: hidden; text-overflow: ellipsis;
+  background: #1f1b24; color: #e9dcf5; font: 600 11px/1.6 var(--mono); padding: 1px 7px; border-radius: 4px; white-space: nowrap; pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<!-- Ícones reutilizáveis -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-blusa" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M8.5 3.5 3 6.5l2 4.2 3-1.2v11h8v-11l3 1.2 2-4.2-5.5-3c-.4 1.6-1.8 2.6-3.5 2.6S8.9 5.1 8.5 3.5Z"/></symbol>
+    <symbol id="i-calca" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M6.5 3.5h11l1 17h-4.2L12 10.5l-2.3 10H5.5l1-17Zm0 3h11"/></symbol>
+    <symbol id="i-casaco" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M9 3.5 4 6v14.5h4.5M15 3.5 20 6v14.5h-4.5M9 3.5 12 8l3-4.5M12 8v12.5M8.5 20.5V11M15.5 20.5V11M8.5 20.5h7"/></symbol>
+    <symbol id="i-calcado" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M3 17.5V9.5h4.5l2.5 3 4 1 5.5 1.2c1.2.3 1.5 1.1 1.5 2v.8H3Zm0 2h18M9 12.2l1.2-1.2M11 13l1.2-1.2"/></symbol>
+    <symbol id="i-acessorio" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M5 9h14l-1.2 11.5H6.2L5 9Zm4 0V7a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="i-outro" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10 6a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2v1L21 16.5c.6.4.3 1.5-.5 1.5H3.5c-.8 0-1.1-1.1-.5-1.5L12 10"/></symbol>
+    <symbol id="i-sol" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></g></symbol>
+    <symbol id="i-nuvem" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M7 18.5h10.5a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6-1A4.5 4.5 0 0 0 7 18.5Z"/></symbol>
+    <symbol id="i-chuva" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15h10.5a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6-1A4.5 4.5 0 0 0 7 15Z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/></g></symbol>
+    <symbol id="i-gota" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3s-6 6.7-6 11a6 6 0 0 0 12 0c0-4.3-6-11-6-11Z"/></symbol>
+    <symbol id="i-local" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></g></symbol>
+    <symbol id="i-mais" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-lapis" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4Zm9-13 4 4"/></symbol>
+    <symbol id="i-lixo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></symbol>
+    <symbol id="i-saida" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M5 12h11M12 7l5 5-5 5M5 12"/></symbol>
+    <symbol id="i-embaralhar" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M3 7h3.5c2.5 0 4 1.5 5.5 5s3 5 5.5 5H21m0 0-2.5-2.5M21 17l-2.5 2.5M3 17h3.5c1.2 0 2.2-.4 3-1M21 7h-3.5c-1.2 0-2.2.4-3 1M21 7l-2.5-2.5M21 7l-2.5 2.5"/></symbol>
+    <symbol id="i-alerta" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4 2.8 19.5h18.4L12 4Z" stroke-linejoin="round"/><path d="M12 10v4.5M12 17v.2"/></g></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-cabide" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M10 6a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2v1L21 16.5c.6.4.3 1.5-.5 1.5H3.5c-.8 0-1.1-1.1-.5-1.5L12 10"/></symbol>
+    <symbol id="i-seta" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m6 15 6-6 6 6"/></symbol>
+  </defs>
+</svg>
+
+<!-- =====================================================
+     TELA 1 — ENTRAR (index.html)
+     ===================================================== -->
+<section id="tela-entrar" class="tela-entrar">
+  <div class="entrar-arte">
+    <div style="position:relative;z-index:1">
+      <div class="marca" style="color:#fff;margin-bottom:40px">
+        <span class="marca-icone" style="background:rgba(255,255,255,.18)"><svg width="20" height="20"><use href="#i-cabide"/></svg></span>
+        <span>Armário Inteligente</span>
+      </div>
+      <h1>O que vestir hoje?</h1>
+      <p>Cadastre suas peças uma vez. Todo dia, o armário consulta o tempo na sua cidade e monta um look com o que está limpo.</p>
+    </div>
+    <svg class="arara" viewBox="0 0 400 260" aria-hidden="true">
+      <path d="M20 30h360" stroke="rgba(255,255,255,.6)" stroke-width="4" stroke-linecap="round"/>
+      <g fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.5">
+        <path d="M80 30v12l-38 22h76z"/><path d="M180 30v12l-38 22h76z"/><path d="M290 30v12l-38 22h76z"/>
+      </g>
+      <path d="M48 64h64l10 30-14 4v120H52V98l-14-4z" fill="#f1eaf7"/>
+      <path d="M146 64h68l4 150h-28l-6-100-6 100h-28z" fill="#4a6a8f"/>
+      <path d="M254 64h72l12 26-12 6v126h-72V96l-12-6z" fill="#d9c7a7"/>
+      <path d="M290 64v158" stroke="rgba(0,0,0,.15)" stroke-width="2"/>
+    </svg>
+    <div class="entrar-passos">
+      <div><b>1</b> Cadastre peças com tipo, cor, ocasião e clima ideal</div>
+      <div><b>2</b> Informe sua cidade</div>
+      <div><b>3</b> Receba o look do dia, pensado para o tempo lá fora</div>
+    </div>
+  </div>
+
+  <div class="entrar-form">
+    <div class="entrar-cartao">
+      <h2>Bem-vinda de volta</h2>
+      <p class="suave" style="margin-top:6px">Entre ou crie sua conta para acessar seu armário.</p>
+
+      <div class="abas" role="tablist">
+        <button class="aba" role="tab" aria-selected="true" data-aba="login">Entrar</button>
+        <button class="aba" role="tab" aria-selected="false" data-aba="cadastro">Criar conta</button>
+      </div>
+
+      <form id="form-login" class="form-grade" data-api="POST /auth/login" novalidate>
+        <label class="campo">E-mail <input type="email" name="email" autocomplete="email" placeholder="voce@exemplo.com" required></label>
+        <label class="campo">Senha <input type="password" name="senha" autocomplete="current-password" required></label>
+        <button class="btn" type="submit" style="margin-top:6px">Entrar</button>
+      </form>
+
+      <form id="form-cadastro" class="form-grade" data-api="POST /auth/registrar" hidden novalidate>
+        <label class="campo">Nome <input name="nome" autocomplete="name" required></label>
+        <label class="campo">E-mail <input type="email" name="email" autocomplete="email" required></label>
+        <label class="campo">Senha <span class="dica">Mínimo de 6 caracteres</span><input type="password" name="senha" minlength="6" autocomplete="new-password" required></label>
+        <label class="campo">Cidade <span class="dica">Usada para buscar a previsão do tempo. Pode alterar depois.</span><input name="cidade" placeholder="Ex.: Curitiba"></label>
+        <button class="btn" type="submit" style="margin-top:6px">Criar conta</button>
+      </form>
+
+      <p id="msg-entrar" class="mensagem" role="status" hidden style="margin-top:16px"></p>
+      <p class="suave pequeno" style="margin-top:20px">Protótipo: qualquer e-mail e senha entram.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     ÁREA LOGADA
+     ===================================================== -->
+<div id="area-logada" hidden>
+  <nav class="menu" aria-label="Principal">
+    <a class="marca" href="#" data-ir="hoje">
+      <span class="marca-icone"><svg width="20" height="20"><use href="#i-cabide"/></svg></span>
+      <span>Armário Inteligente</span>
+    </a>
+    <div class="nav">
+      <button class="nav-link" data-ir="hoje">Hoje</button>
+      <button class="nav-link" data-ir="armario">Meu armário</button>
+      <button class="nav-link" data-ir="closets">Closets</button>
+    </div>
+    <div class="menu-direita">
+      <button class="cidade-menu" id="btn-cidade-menu" title="Alterar cidade"><svg width="14" height="14"><use href="#i-local"/></svg><span id="cidade-menu-texto"></span></button>
+      <button class="avatar" id="btn-perfil" title="Meu perfil" data-api="GET /auth/eu"></button>
+      <button class="btn fantasma pequeno" id="btn-sair">Sair</button>
+    </div>
+  </nav>
+
+  <main class="conteudo">
+
+    <!-- ===================== TELA 2 — HOJE ===================== -->
+    <section id="tela-hoje" class="tela">
+      <div class="cabecalho-tela">
+        <div>
+          <p class="suave" id="hoje-data"></p>
+          <h1 id="hoje-saudacao">O que vestir hoje?</h1>
+        </div>
+      </div>
+
+      <div class="hoje-topo">
+        <div id="clima-cartao" class="cartao clima-cartao" data-api="GET /clima"></div>
+
+        <div class="cartao controles">
+          <div>
+            <span class="rotulo">Ocasião</span>
+            <div class="chips" id="chips-ocasiao" role="group" aria-label="Ocasião"></div>
+          </div>
+          <div>
+            <label class="rotulo" for="hoje-cidade">Cidade</label>
+            <div class="linha-cidade">
+              <input id="hoje-cidade" placeholder="Vazio = cidade do cadastro">
+              <button class="btn secundario" id="btn-buscar-cidade">Buscar</button>
+            </div>
+          </div>
+          <button class="btn" id="btn-sugerir"><svg width="18" height="18"><use href="#i-embaralhar"/></svg> Sugerir outro look</button>
+        </div>
+      </div>
+
+      <div class="look-cabecalho">
+        <div>
+          <h2>Look sugerido</h2>
+          <p class="suave pequeno" id="look-resumo"></p>
+        </div>
+      </div>
+      <div id="area-look" data-api="GET /looks/sugestao"></div>
+      <ul class="avisos" id="avisos"></ul>
+    </section>
+
+    <!-- ===================== TELA 3 — MEU ARMÁRIO ===================== -->
+    <section id="tela-armario" class="tela" hidden>
+      <div class="cabecalho-tela">
+        <div>
+          <h1>Meu armário</h1>
+          <p class="suave" id="armario-resumo"></p>
+        </div>
+        <button class="btn" id="btn-nova-peca" data-api="POST /pecas"><svg width="18" height="18"><use href="#i-mais"/></svg> Nova peça</button>
+      </div>
+
+      <div class="barra-vista">
+        <div class="segmentado" role="group" aria-label="Visualização">
+          <button data-vista="ativas" aria-pressed="true">Ativas <span class="contador" id="cont-ativas"></span></button>
+          <button data-vista="agrupadas" aria-pressed="false">Agrupadas</button>
+          <button data-vista="retiradas" aria-pressed="false">Retiradas <span class="contador" id="cont-retiradas"></span></button>
+        </div>
+        <label class="campo" id="campo-agrupar" hidden style="flex-direction:row;display:flex;align-items:center;gap:8px">
+          Agrupar por
+          <select id="agrupar-por" style="width:auto"><option value="tipo">Tipo</option><option value="cor">Cor</option><option value="modelo">Modelo</option></select>
+        </label>
+        <label class="campo" id="campo-motivo" hidden style="flex-direction:row;display:flex;align-items:center;gap:8px">
+          Motivo
+          <select id="filtro-motivo" style="width:auto"><option value="">Todos</option><option>Venda</option><option>Doação</option><option>Perda</option><option>Outro</option></select>
+        </label>
+      </div>
+
+      <form id="form-filtros" class="cartao barra-filtros" data-api="GET /pecas?tipo=&cor=&…">
+        <label class="campo">Tipo<select name="tipo"><option value="">Todos</option></select></label>
+        <label class="campo">Cor<input name="cor" placeholder="Ex.: preto"></label>
+        <label class="campo">Estado<select name="estado"><option value="">Todos</option></select></label>
+        <label class="campo">Ocasião<select name="ocasiao"><option value="">Todas</option></select></label>
+        <label class="campo">Clima ideal<select name="clima_ideal"><option value="">Todos</option></select></label>
+        <button type="reset" class="btn fantasma pequeno">Limpar</button>
+      </form>
+
+      <div id="area-armario"></div>
+    </section>
+
+    <!-- ===================== TELA 4 — CLOSETS ===================== -->
+    <section id="tela-closets" class="tela" hidden>
+      <div class="cabecalho-tela">
+        <div>
+          <h1>Closets</h1>
+          <p class="suave">Agrupe peças em coleções, como "Viagem" ou "Trabalho de inverno". Uma peça pode estar em vários closets.</p>
+        </div>
+        <button class="btn" id="btn-novo-closet" data-api="POST /closets"><svg width="18" height="18"><use href="#i-mais"/></svg> Novo closet</button>
+      </div>
+      <div id="area-closets" data-api="GET /closets"></div>
+    </section>
+  </main>
+</div>
+
+<!-- =====================================================
+     MODAIS
+     ===================================================== -->
+<dialog id="modal-peca" aria-labelledby="modal-peca-titulo">
+  <form id="form-peca" method="dialog" novalidate>
+    <div class="modal-topo">
+      <div><h2 id="modal-peca-titulo">Nova peça</h2><p class="suave pequeno" id="modal-peca-sub">Os campos com * são obrigatórios.</p></div>
+      <button type="button" class="btn fantasma icone" data-fechar aria-label="Fechar"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <label class="campo" data-nome="nome">Nome *<input name="nome" placeholder="Ex.: Moletom cinza"><span class="erro-campo"></span></label>
+      <div class="duas-colunas">
+        <label class="campo" data-nome="tipo">Tipo *<select name="tipo"></select></label>
+        <label class="campo" data-nome="cor">Cor *<input name="cor" placeholder="Ex.: cinza" list="lista-cores"><span class="erro-campo"></span></label>
+      </div>
+      <div class="duas-colunas">
+        <label class="campo" data-nome="modelo">Modelo<input name="modelo" placeholder="Ex.: canguru"></label>
+        <label class="campo" data-nome="estado">Estado<select name="estado"></select></label>
+      </div>
+      <div class="duas-colunas">
+        <label class="campo" data-nome="ocasiao">Ocasião<select name="ocasiao"></select></label>
+        <label class="campo" data-nome="clima_ideal">Clima ideal<select name="clima_ideal"></select></label>
+      </div>
+      <label class="check"><input type="checkbox" name="pode_chuva"> Pode usar na chuva</label>
+      <label class="campo" data-nome="observacoes">Observações<input name="observacoes" placeholder="Opcional"></label>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn fantasma" data-fechar>Cancelar</button>
+      <button type="submit" class="btn" id="btn-salvar-peca">Cadastrar peça</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="lista-cores"></datalist>
+
+<dialog id="modal-retirar" aria-labelledby="modal-retirar-titulo">
+  <form id="form-retirar" method="dialog" novalidate>
+    <div class="modal-topo">
+      <div><h2 id="modal-retirar-titulo">Retirar do armário</h2><p class="suave pequeno" id="retirar-nome"></p></div>
+      <button type="button" class="btn fantasma icone" data-fechar aria-label="Fechar"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <p class="pequeno suave">A peça sai do armário e das sugestões, mas o registro continua no histórico de retiradas.</p>
+      <div>
+        <span class="campo" style="margin-bottom:8px">Motivo</span>
+        <div class="chips" id="chips-motivo"></div>
+      </div>
+      <label class="campo" id="campo-observacao" hidden>Observação * <span class="dica">Obrigatória quando o motivo é "Outro"</span><textarea name="observacao"></textarea><span class="erro-campo"></span></label>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn fantasma" data-fechar>Cancelar</button>
+      <button type="submit" class="btn perigo">Retirar peça</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="modal-closet" aria-labelledby="modal-closet-titulo">
+  <form id="form-closet" method="dialog" novalidate>
+    <div class="modal-topo">
+      <div><h2 id="modal-closet-titulo">Novo closet</h2></div>
+      <button type="button" class="btn fantasma icone" data-fechar aria-label="Fechar"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <label class="campo" data-nome="nome">Nome *<input name="nome" placeholder="Ex.: Viagem para a serra"><span class="erro-campo"></span></label>
+      <label class="campo">Descrição<input name="descricao" placeholder="Opcional"></label>
+      <div class="campo">Peças <span class="dica" id="closet-contagem">Nenhuma selecionada</span></div>
+      <div class="lista-check" id="closet-pecas"></div>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn fantasma" data-fechar>Cancelar</button>
+      <button type="submit" class="btn" id="btn-salvar-closet">Criar closet</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="modal-confirmar" aria-labelledby="confirmar-titulo">
+  <form method="dialog">
+    <div class="modal-topo"><h2 id="confirmar-titulo"></h2></div>
+    <div class="modal-corpo"><p id="confirmar-texto" class="suave"></p></div>
+    <div class="modal-rodape">
+      <button value="nao" class="btn fantasma">Cancelar</button>
+      <button value="sim" class="btn perigo" id="confirmar-ok">Apagar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="modal-perfil" aria-labelledby="perfil-titulo">
+  <form id="form-perfil" method="dialog" novalidate data-api="PATCH /auth/eu">
+    <div class="modal-topo">
+      <div><h2 id="perfil-titulo">Meu perfil</h2></div>
+      <button type="button" class="btn fantasma icone" data-fechar aria-label="Fechar"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <label class="campo">Nome<input name="nome"></label>
+      <label class="campo">E-mail <span class="dica">Não pode ser alterado</span><input name="email" disabled></label>
+      <label class="campo">Cidade <span class="dica">Usada na previsão do tempo da tela Hoje</span><input name="cidade"></label>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn fantasma" data-fechar>Cancelar</button>
+      <button type="submit" class="btn">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<!-- =====================================================
+     PAINEL DO PROTÓTIPO (não faz parte do produto)
+     ===================================================== -->
+<details class="painel-proto">
+  <summary><span class="tag-proto">PROTÓTIPO</span> Simular estados <svg class="seta" width="16" height="16"><use href="#i-seta"/></svg></summary>
+  <div class="painel-corpo">
+    <label>Clima de hoje (OpenWeatherMap)
+      <select id="sim-clima">
+        <option value="Curitiba">Curitiba — 12 °C, chuva leve (Frio)</option>
+        <option value="São Paulo">São Paulo — 21 °C, nublado (Ameno)</option>
+        <option value="Rio de Janeiro">Rio de Janeiro — 31 °C, céu limpo (Quente)</option>
+      </select>
+    </label>
+    <label>Resposta da API
+      <select id="sim-api">
+        <option value="ok">200 · Normal</option>
+        <option value="carregando">Carregando</option>
+        <option value="503">503 · Serviço de clima indisponível</option>
+        <option value="404">404 · Cidade não encontrada</option>
+        <option value="401">401 · Token vencido (volta ao login)</option>
+      </select>
+    </label>
+    <label>Dados do armário
+      <select id="sim-dados">
+        <option value="cheio">Armário com peças</option>
+        <option value="vazio">Conta nova (armário vazio)</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" id="sim-anotar"> Mostrar rotas da API nos componentes</label>
+    <label>Tema
+      <select id="sim-tema"><option value="">Seguir o sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select>
+    </label>
+  </div>
+</details>
+
+<script>
+/* =========================================================
+   VALORES ACEITOS — exatamente como no contrato (seção 4)
+   ========================================================= */
+const TIPOS = ["Blusa", "Calça", "Casaco", "Calçado", "Acessório", "Outro"];
+const ESTADOS = ["Limpa", "Suja", "Manutenção"];
+const OCASIOES = ["Casual", "Trabalho", "Festa", "Esporte"];
+const CLIMAS = ["Frio", "Ameno", "Quente", "Qualquer"];
+const MOTIVOS = ["Venda", "Doação", "Perda", "Outro"];
+
+const ICONE_TIPO = { "Blusa": "i-blusa", "Calça": "i-calca", "Casaco": "i-casaco", "Calçado": "i-calcado", "Acessório": "i-acessorio", "Outro": "i-outro" };
+
+/* Cor digitada (texto livre) -> amostra visual. Sugestão: levar este mapa para o front real. */
+const CORES = {
+  branco: "#f4f2ee", branca: "#f4f2ee", preto: "#232323", preta: "#232323", cinza: "#8d8d8d",
+  bege: "#d9c7a7", caramelo: "#b5803f", marrom: "#6b4630", azul: "#3d6fb6", jeans: "#4a6a8f",
+  "azul-marinho": "#1f2f52", vermelho: "#b8322f", vermelha: "#b8322f", vinho: "#6d1f2c", rosa: "#e39bb0",
+  verde: "#4f7d4a", amarelo: "#e2b93b", amarela: "#e2b93b", laranja: "#e07a3a", roxo: "#7a4fa0", roxa: "#7a4fa0", lilás: "#b9a2d6", creme: "#efe6cf"
+};
+function corHex(cor) { return CORES[(cor || "").trim().toLowerCase()] || null; }
+function claridade(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+}
+
+/* =========================================================
+   DADOS DE EXEMPLO (no produto, vêm da API)
+   ========================================================= */
+const PECAS_EXEMPLO = [
+  { id: 1, nome: "Blusa de lã", tipo: "Blusa", cor: "bege", modelo: "gola alta", ocasiao: "Casual", clima_ideal: "Frio", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 2, nome: "Camiseta básica", tipo: "Blusa", cor: "branco", modelo: "gola careca", ocasiao: "Casual", clima_ideal: "Qualquer", pode_chuva: true, estado: "Limpa", observacoes: "" },
+  { id: 3, nome: "Camisa social", tipo: "Blusa", cor: "azul", modelo: "manga longa", ocasiao: "Trabalho", clima_ideal: "Ameno", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 4, nome: "Regata dry-fit", tipo: "Blusa", cor: "preto", modelo: "esportiva", ocasiao: "Esporte", clima_ideal: "Quente", pode_chuva: true, estado: "Suja", observacoes: "" },
+  { id: 5, nome: "Calça jeans", tipo: "Calça", cor: "jeans", modelo: "reta", ocasiao: "Casual", clima_ideal: "Qualquer", pode_chuva: true, estado: "Limpa", observacoes: "" },
+  { id: 6, nome: "Calça de alfaiataria", tipo: "Calça", cor: "preto", modelo: "pantalona", ocasiao: "Trabalho", clima_ideal: "Ameno", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 7, nome: "Bermuda de linho", tipo: "Calça", cor: "bege", modelo: "bermuda", ocasiao: "Casual", clima_ideal: "Quente", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 8, nome: "Legging", tipo: "Calça", cor: "cinza", modelo: "cintura alta", ocasiao: "Esporte", clima_ideal: "Qualquer", pode_chuva: true, estado: "Limpa", observacoes: "" },
+  { id: 9, nome: "Moletom cinza", tipo: "Casaco", cor: "cinza", modelo: "canguru", ocasiao: "Casual", clima_ideal: "Frio", pode_chuva: true, estado: "Limpa", observacoes: "Presente da vó" },
+  { id: 10, nome: "Trench coat", tipo: "Casaco", cor: "caramelo", modelo: "sobretudo", ocasiao: "Trabalho", clima_ideal: "Frio", pode_chuva: true, estado: "Manutenção", observacoes: "Botão solto" },
+  { id: 11, nome: "Blazer", tipo: "Casaco", cor: "preto", modelo: "acinturado", ocasiao: "Trabalho", clima_ideal: "Ameno", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 12, nome: "Tênis branco", tipo: "Calçado", cor: "branco", modelo: "casual", ocasiao: "Casual", clima_ideal: "Qualquer", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 13, nome: "Bota de couro", tipo: "Calçado", cor: "marrom", modelo: "cano curto", ocasiao: "Casual", clima_ideal: "Frio", pode_chuva: true, estado: "Limpa", observacoes: "" },
+  { id: 14, nome: "Sapatilha", tipo: "Calçado", cor: "preto", modelo: "bico fino", ocasiao: "Trabalho", clima_ideal: "Qualquer", pode_chuva: false, estado: "Suja", observacoes: "" },
+  { id: 15, nome: "Rasteira", tipo: "Calçado", cor: "caramelo", modelo: "tiras", ocasiao: "Casual", clima_ideal: "Quente", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 16, nome: "Cachecol xadrez", tipo: "Acessório", cor: "vermelho", modelo: "", ocasiao: "Casual", clima_ideal: "Frio", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 17, nome: "Boné", tipo: "Acessório", cor: "preto", modelo: "aba curva", ocasiao: "Esporte", clima_ideal: "Quente", pode_chuva: true, estado: "Limpa", observacoes: "" },
+  { id: 18, nome: "Vestido floral", tipo: "Outro", cor: "rosa", modelo: "midi", ocasiao: "Festa", clima_ideal: "Quente", pode_chuva: false, estado: "Limpa", observacoes: "" },
+  { id: 19, nome: "Jaqueta jeans", tipo: "Casaco", cor: "jeans", modelo: "oversized", ocasiao: "Casual", clima_ideal: "Ameno", pode_chuva: false, estado: "Limpa", observacoes: "",
+    retirada_em: "2026-09-14", motivo_retirada: "Doação", observacao_retirada: "" },
+  { id: 20, nome: "Tênis de corrida", tipo: "Calçado", cor: "azul", modelo: "running", ocasiao: "Esporte", clima_ideal: "Qualquer", pode_chuva: true, estado: "Suja", observacoes: "",
+    retirada_em: "2026-10-02", motivo_retirada: "Outro", observacao_retirada: "Sola descolou" },
+];
+const CLOSETS_EXEMPLO = [
+  { id: 1, nome: "Trabalho de inverno", descricao: "Combinações para dias frios no escritório", pecas_ids: [3, 6, 10, 11, 13] },
+  { id: 2, nome: "Viagem para a praia", descricao: "Mala de verão", pecas_ids: [2, 7, 15, 17, 18] },
+];
+
+/* Respostas simuladas do OpenWeatherMap, já no formato do GET /clima */
+const CLIMAS_SIMULADOS = {
+  "curitiba":       { cidade: "Curitiba", temperatura: 12.4, sensacao: 10.9, descricao: "chuva leve", chuva: true },
+  "são paulo":      { cidade: "São Paulo", temperatura: 21.3, sensacao: 20.8, descricao: "nublado", chuva: false },
+  "sao paulo":      { cidade: "São Paulo", temperatura: 21.3, sensacao: 20.8, descricao: "nublado", chuva: false },
+  "rio de janeiro": { cidade: "Rio de Janeiro", temperatura: 31.2, sensacao: 34.0, descricao: "céu limpo", chuva: false },
+  "porto alegre":   { cidade: "Porto Alegre", temperatura: 8.6, sensacao: 6.1, descricao: "céu limpo", chuva: false },
+  "salvador":       { cidade: "Salvador", temperatura: 27.5, sensacao: 30.2, descricao: "chuva moderada", chuva: true },
+};
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+const estado = {
+  usuario: { nome: "Mariana", email: "mariana@exemplo.com", cidade: "Curitiba" },
+  pecas: structuredClone(PECAS_EXEMPLO),
+  closets: structuredClone(CLOSETS_EXEMPLO),
+  proximoId: 100,
+  tela: "hoje",
+  ocasiao: "",
+  cidadeBusca: "",
+  vista: "ativas",
+  sim: { api: "ok", dados: "cheio" },
+};
+
+/* =========================================================
+   UTILITÁRIOS DE DOM
+   Textos digitados entram sempre por textContent (Passo 6 do plano).
+   ========================================================= */
+function el(tag, props = {}, ...filhos) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v === undefined || v === null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const f of filhos.flat()) if (f !== null && f !== undefined && f !== false) n.append(f);
+  return n;
+}
+function icone(id, tam = 20) {
+  const ns = "http://www.w3.org/2000/svg";
+  const s = document.createElementNS(ns, "svg");
+  s.setAttribute("width", tam); s.setAttribute("height", tam); s.setAttribute("aria-hidden", "true");
+  const u = document.createElementNS(ns, "use"); u.setAttribute("href", "#" + id); s.append(u);
+  return s;
+}
+function amostra(cor) {
+  const hex = corHex(cor);
+  const s = el("span", { class: "amostra" + (hex ? "" : " desconhecida"), title: cor });
+  if (hex) s.style.background = hex;
+  return s;
+}
+function fundoPeca(cor) {
+  const hex = corHex(cor);
+  if (!hex) return { fundo: "var(--cartao-2)", tinta: "var(--texto-suave)" };
+  return { fundo: hex, tinta: claridade(hex) > 0.6 ? "#3a3530" : "#fff" };
+}
+function classeEstado(e) { return { "Limpa": "limpa", "Suja": "suja", "Manutenção": "manutencao" }[e]; }
+function badgeEstado(e) { return el("span", { class: "badge " + classeEstado(e) }, el("span", { class: "ponto" }), e); }
+function badgeClima(c) {
+  const cls = { "Frio": "frio", "Ameno": "ameno", "Quente": "quente" }[c];
+  return el("span", { class: "badge " + (cls || "") }, c);
+}
+function toast(texto) {
+  const t = el("div", { class: "toast" }, icone("i-check", 16), texto);
+  document.getElementById("toasts").append(t);
+  setTimeout(() => t.remove(), 2600);
+}
+function preencherSelect(select, valores, primeiro) {
+  if (primeiro !== undefined) { select.replaceChildren(new Option(primeiro, "")); }
+  else select.replaceChildren();
+  for (const v of valores) select.append(new Option(v, v));
+}
+function dataBR(iso) { const [a, m, d] = iso.split("-"); return `${d}/${m}/${a}`; }
+
+/* =========================================================
+   REGRA DA SUGESTÃO — espelha app/services/openweather.py
+   e app/routers/clima.py (Etapa 4)
+   ========================================================= */
+function classificarClima(sensacao) {
+  if (sensacao < 15) return "Frio";
+  if (sensacao < 25) return "Ameno";
+  return "Quente";
+}
+function buscarClima(cidade) {
+  const dados = CLIMAS_SIMULADOS[cidade.trim().toLowerCase()];
+  if (!dados) return { erro: 404, detail: "Cidade não encontrada" };
+  return { ...dados, clima: classificarClima(dados.sensacao) };
+}
+function pecasAtivas() { return estado.pecas.filter(p => !p.retirada_em); }
+
+function sugerirLook(clima, ocasiao) {
+  const precisaCasaco = clima.clima === "Frio" || clima.chuva;
+  let pecas = pecasAtivas().filter(p =>
+    p.estado === "Limpa" && (p.clima_ideal === clima.clima || p.clima_ideal === "Qualquer"));
+  if (ocasiao) pecas = pecas.filter(p => p.ocasiao === ocasiao);
+
+  function escolher(tipo) {
+    let candidatas = pecas.filter(p => p.tipo === tipo);
+    if (clima.chuva) {
+      const praChuva = candidatas.filter(p => p.pode_chuva);
+      if (praChuva.length) candidatas = praChuva;
+    }
+    return candidatas.length ? candidatas[Math.floor(Math.random() * candidatas.length)] : null;
+  }
+  const look = {
+    parte_de_cima: escolher("Blusa"),
+    parte_de_baixo: escolher("Calça"),
+    calcado: escolher("Calçado"),
+    acessorio: escolher("Acessório"),
+    casaco: precisaCasaco ? escolher("Casaco") : null,
+  };
+  const avisos = [];
+  if (!look.parte_de_cima) avisos.push("Nenhuma blusa limpa para esse clima");
+  if (!look.parte_de_baixo) avisos.push("Nenhuma calça limpa para esse clima");
+  if (!look.calcado) avisos.push("Nenhum calçado limpo para esse clima");
+  if (precisaCasaco && !look.casaco) avisos.push("Está frio ou chovendo, mas não há casaco limpo");
+  return { clima, look, avisos, compativeis: pecas.length, precisaCasaco };
+}
+
+/* =========================================================
+   NAVEGAÇÃO
+   ========================================================= */
+function entrar() {
+  document.getElementById("tela-entrar").hidden = true;
+  document.getElementById("area-logada").hidden = false;
+  atualizarMenu();
+  ir("hoje");
+}
+function sair(msg) {
+  document.getElementById("area-logada").hidden = true;
+  document.getElementById("tela-entrar").hidden = false;
+  const m = document.getElementById("msg-entrar");
+  if (msg) { m.textContent = msg; m.className = "mensagem erro"; m.hidden = false; }
+  else m.hidden = true;
+  window.scrollTo(0, 0);
+}
+function ir(tela) {
+  estado.tela = tela;
+  for (const t of ["hoje", "armario", "closets"]) document.getElementById("tela-" + t).hidden = t !== tela;
+  document.querySelectorAll(".nav-link").forEach(b => b.setAttribute("aria-current", b.dataset.ir === tela ? "page" : "false"));
+  if (tela === "hoje") renderHoje();
+  if (tela === "armario") renderArmario();
+  if (tela === "closets") renderClosets();
+  window.scrollTo(0, 0);
+}
+function atualizarMenu() {
+  const u = estado.usuario;
+  document.getElementById("btn-perfil").textContent = (u.nome || "?").trim().charAt(0).toUpperCase();
+  document.getElementById("cidade-menu-texto").textContent = u.cidade || "Sem cidade";
+}
+
+/* =========================================================
+   TELA HOJE
+   ========================================================= */
+const NOMES_DAS_PARTES = { parte_de_cima: "Parte de cima", parte_de_baixo: "Parte de baixo", calcado: "Calçado", acessorio: "Acessório", casaco: "Casaco" };
+const TIPO_DA_PARTE = { parte_de_cima: "Blusa", parte_de_baixo: "Calça", calcado: "Calçado", acessorio: "Acessório", casaco: "Casaco" };
+
+function frasePraHoje(c) {
+  if (c.clima === "Frio" && c.chuva) return "Dia frio e com chuva: vá de casaco e prefira peças que aguentam molhar.";
+  if (c.clima === "Frio") return "Dia frio: o look inclui um casaco.";
+  if (c.chuva) return "Vai chover: o look inclui um casaco e prioriza peças que podem molhar.";
+  if (c.clima === "Quente") return "Dia quente: peças leves e frescas.";
+  return "Temperatura agradável: dá para usar quase tudo.";
+}
+
+function renderOcasioes() {
+  const area = document.getElementById("chips-ocasiao");
+  area.replaceChildren();
+  for (const o of ["", ...OCASIOES]) {
+    area.append(el("button", { class: "chip", type: "button", "aria-pressed": String(estado.ocasiao === o),
+      onclick: () => { estado.ocasiao = o; renderOcasioes(); renderHoje(); } }, o || "Qualquer"));
+  }
+}
+
+function renderHoje() {
+  const hoje = new Date();
+  const dataTxt = hoje.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  document.getElementById("hoje-data").textContent = dataTxt.charAt(0).toUpperCase() + dataTxt.slice(1);
+  document.getElementById("hoje-saudacao").textContent = `Oi, ${estado.usuario.nome.split(" ")[0]}! O que vestir hoje?`;
+  renderOcasioes();
+
+  const cartaoClima = document.getElementById("clima-cartao");
+  const areaLook = document.getElementById("area-look");
+  const listaAvisos = document.getElementById("avisos");
+  const resumo = document.getElementById("look-resumo");
+  cartaoClima.className = "cartao clima-cartao";
+  cartaoClima.replaceChildren(); areaLook.replaceChildren(); listaAvisos.replaceChildren(); resumo.textContent = "";
+
+  const cidade = (estado.cidadeBusca || estado.usuario.cidade || "").trim();
+
+  // Estado: carregando
+  if (estado.sim.api === "carregando") {
+    cartaoClima.append(
+      el("div", { class: "esqueleto", style: "height:18px;width:40%" }),
+      el("div", { class: "esqueleto", style: "height:64px;width:60%;margin-top:16px" }),
+      el("div", { class: "esqueleto", style: "height:24px;width:80%;margin-top:16px" }));
+    const g = el("div", { class: "look-grade" });
+    for (let i = 0; i < 5; i++) g.append(el("div", { class: "esqueleto", style: "min-height:210px;border-radius:12px" }));
+    areaLook.append(g);
+    resumo.textContent = "Consultando o tempo…";
+    return;
+  }
+  // Sem cidade: 400
+  if (!cidade) return erroHoje(cartaoClima, areaLook, "i-local", "Informe a cidade ou cadastre uma no seu perfil", "400 · sem cidade",
+    el("button", { class: "btn secundario", onclick: abrirPerfil }, "Cadastrar cidade"));
+  // Erros simulados
+  if (estado.sim.api === "503") return erroHoje(cartaoClima, areaLook, "i-nuvem", "Serviço de clima indisponível", "503",
+    el("button", { class: "btn secundario", onclick: renderHoje }, "Tentar de novo"));
+
+  const resposta = estado.sim.api === "404" ? { erro: 404, detail: "Cidade não encontrada" } : buscarClima(cidade);
+  if (resposta.erro) return erroHoje(cartaoClima, areaLook, "i-local", `${resposta.detail}: "${cidade}"`, "404",
+    el("p", { class: "suave pequeno", text: "Confira a grafia ou tente outra cidade no campo ao lado." }));
+
+  const dados = sugerirLook(resposta, estado.ocasiao);
+  const c = dados.clima;
+  const cls = c.clima.toLowerCase();
+  cartaoClima.classList.add(cls);
+  cartaoClima.append(
+    el("div", { class: "clima-cidade" }, icone("i-local", 16), c.cidade),
+    el("div", { class: "clima-linha" },
+      icone(c.chuva ? "i-chuva" : c.clima === "Quente" ? "i-sol" : "i-nuvem", 72),
+      el("div", {},
+        el("div", { class: "clima-temp", text: `${Math.round(c.temperatura)}°` }),
+        el("div", { class: "suave", text: `Sensação de ${Math.round(c.sensacao)}° · ${c.descricao}` }))),
+    el("div", { class: "clima-dados" },
+      badgeClima(c.clima),
+      c.chuva ? el("span", { class: "badge frio" }, icone("i-gota", 12), "Chuva") : null),
+    el("p", { class: "clima-frase", text: frasePraHoje(c) }));
+  cartaoClima.querySelectorAll(".clima-linha > svg").forEach(s => s.classList.add("clima-icone"));
+
+  // Armário vazio
+  if (pecasAtivas().length === 0) {
+    areaLook.append(el("div", { class: "cartao estado-tela" }, icone("i-cabide", 48),
+      el("h3", { text: "Seu armário ainda está vazio" }),
+      el("p", { class: "suave", text: "Cadastre algumas peças para receber sugestões de look para o tempo de hoje." }),
+      el("button", { class: "btn", onclick: () => { ir("armario"); abrirModalPeca(); } }, icone("i-mais", 18), "Cadastrar primeira peça")));
+    return;
+  }
+
+  resumo.textContent = `${dados.compativeis} peça${dados.compativeis === 1 ? "" : "s"} limpa${dados.compativeis === 1 ? "" : "s"} combinam com o clima ${c.clima.toLowerCase()}${estado.ocasiao ? " e a ocasião " + estado.ocasiao : ""}.`;
+
+  const grade = el("div", { class: "look-grade" });
+  for (const parte of Object.keys(NOMES_DAS_PARTES)) {
+    const peca = dados.look[parte];
+    if (peca) {
+      const { fundo, tinta } = fundoPeca(peca.cor);
+      const visual = el("div", { class: "slot-visual" }, icone(ICONE_TIPO[peca.tipo], 52));
+      visual.style.background = fundo; visual.style.color = tinta;
+      if (c.chuva && peca.pode_chuva) visual.append(el("span", { class: "chuva-tag" }, icone("i-gota", 10), "chuva"));
+      grade.append(el("div", { class: "slot" },
+        el("span", { class: "slot-parte", text: NOMES_DAS_PARTES[parte] }),
+        visual,
+        el("span", { class: "slot-nome", text: peca.nome }),
+        el("span", { class: "slot-meta" }, amostra(peca.cor), `${peca.cor}${peca.modelo ? " · " + peca.modelo : ""}`)));
+    } else if (parte === "casaco" && !dados.precisaCasaco) {
+      grade.append(el("div", { class: "slot dispensado" },
+        el("span", { class: "slot-parte", text: NOMES_DAS_PARTES[parte] }),
+        el("div", { class: "slot-visual", style: "color:var(--texto-suave);opacity:.5" }, icone("i-casaco", 52)),
+        el("span", { class: "slot-nome suave pequeno", text: "Não precisa hoje" })));
+    } else {
+      grade.append(el("div", { class: "slot vazio" },
+        el("span", { class: "slot-parte", text: NOMES_DAS_PARTES[parte] }),
+        el("div", { class: "slot-visual" }, icone(ICONE_TIPO[TIPO_DA_PARTE[parte]], 52)),
+        el("span", { class: "slot-nome", text: "Nada disponível" })));
+    }
+  }
+  areaLook.append(grade);
+
+  for (const aviso of dados.avisos) {
+    listaAvisos.append(el("li", {}, icone("i-alerta", 18), el("span", { text: aviso }),
+      el("a", { onclick: () => { ir("armario"); abrirModalPeca(); } }, "Cadastrar peça")));
+  }
+}
+
+function erroHoje(cartao, area, ic, titulo, codigo, acao) {
+  cartao.append(el("div", { class: "estado-tela erro", style: "padding:16px" }, icone(ic, 48),
+    el("h3", { text: titulo }), el("span", { class: "badge", text: codigo }), acao));
+  area.append(el("div", { class: "cartao estado-tela" },
+    el("p", { class: "suave", text: "Sem a previsão do tempo, não dá para sugerir o look de hoje." }),
+    el("button", { class: "btn secundario", onclick: () => ir("armario") }, "Ver meu armário")));
+}
+
+/* =========================================================
+   TELA MEU ARMÁRIO
+   ========================================================= */
+function filtros() {
+  const f = Object.fromEntries(new FormData(document.getElementById("form-filtros")));
+  return f;
+}
+function aplicarFiltros(lista) {
+  const f = filtros();
+  return lista.filter(p =>
+    (!f.tipo || p.tipo === f.tipo) &&
+    (!f.estado || p.estado === f.estado) &&
+    (!f.ocasiao || p.ocasiao === f.ocasiao) &&
+    (!f.clima_ideal || p.clima_ideal === f.clima_ideal) &&
+    (!f.cor || p.cor.toLowerCase().includes(f.cor.trim().toLowerCase())));
+}
+
+function renderArmario() {
+  const ativas = pecasAtivas();
+  const retiradas = estado.pecas.filter(p => p.retirada_em);
+  document.getElementById("cont-ativas").textContent = ativas.length;
+  document.getElementById("cont-retiradas").textContent = retiradas.length;
+  const limpas = ativas.filter(p => p.estado === "Limpa").length;
+  document.getElementById("armario-resumo").textContent =
+    `${ativas.length} peças · ${limpas} limpas · ${ativas.length - limpas} sujas ou em manutenção`;
+
+  document.querySelectorAll("[data-vista]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.vista === estado.vista)));
+  document.getElementById("campo-agrupar").hidden = estado.vista !== "agrupadas";
+  document.getElementById("campo-motivo").hidden = estado.vista !== "retiradas";
+  document.getElementById("form-filtros").hidden = estado.vista === "retiradas";
+
+  const area = document.getElementById("area-armario");
+  area.replaceChildren();
+  area.removeAttribute("data-api");
+
+  if (estado.sim.api === "carregando") {
+    const g = el("div", { class: "grade" });
+    for (let i = 0; i < 6; i++) g.append(el("div", { class: "esqueleto", style: "height:260px;border-radius:12px" }));
+    area.append(g); return;
+  }
+
+  if (estado.vista === "retiradas") return renderRetiradas(area, retiradas);
+
+  if (ativas.length === 0) {
+    area.append(el("div", { class: "cartao estado-tela" }, icone("i-cabide", 48),
+      el("h3", { text: "Nenhuma peça por aqui ainda" }),
+      el("p", { class: "suave", text: "Comece pelas peças que você mais usa: uma blusa, uma calça e um calçado já rendem um look." }),
+      el("button", { class: "btn", onclick: () => abrirModalPeca() }, icone("i-mais", 18), "Cadastrar peça")));
+    return;
+  }
+
+  const filtradas = aplicarFiltros(ativas);
+  if (filtradas.length === 0) {
+    area.append(el("div", { class: "cartao estado-tela" },
+      el("h3", { text: "Nenhuma peça encontrada" }),
+      el("p", { class: "suave", text: "Tente remover algum filtro." }),
+      el("button", { class: "btn secundario", onclick: () => { document.getElementById("form-filtros").reset(); renderArmario(); } }, "Limpar filtros")));
+    return;
+  }
+
+  if (estado.vista === "agrupadas") {
+    const por = document.getElementById("agrupar-por").value;
+    area.setAttribute("data-api", "GET /pecas/agrupadas?por=" + por);
+    const grupos = {};
+    for (const p of filtradas) { const k = (p[por] || "sem " + por).toLowerCase(); (grupos[k] ||= []).push(p); }
+    for (const [nome, pecas] of Object.entries(grupos).sort()) {
+      const g = el("div", { class: "grade" }); pecas.forEach(p => g.append(cartaoPeca(p)));
+      area.append(el("section", { class: "grupo" },
+        el("div", { class: "grupo-titulo" }, por === "cor" ? amostra(nome) : null, el("span", { text: nome }), el("span", { class: "contador", text: pecas.length })), g));
+    }
+    return;
+  }
+
+  const g = el("div", { class: "grade" });
+  filtradas.forEach(p => g.append(cartaoPeca(p)));
+  area.append(g);
+}
+
+function cartaoPeca(p) {
+  const { fundo, tinta } = fundoPeca(p.cor);
+  const visual = el("div", { class: "peca-visual" }, icone(ICONE_TIPO[p.tipo], 48), badgeEstado(p.estado));
+  visual.style.background = fundo; visual.style.color = tinta;
+  if (p.pode_chuva) visual.append(el("span", { class: "chuva-tag", title: "Pode usar na chuva" }, icone("i-gota", 10), "chuva"));
+
+  const novoEstado = p.estado === "Limpa" ? "Suja" : "Limpa";
+  return el("article", { class: "cartao-peca" },
+    visual,
+    el("div", { class: "peca-corpo" },
+      el("span", { class: "peca-nome", text: p.nome }),
+      el("span", { class: "peca-linha" }, amostra(p.cor), `${p.tipo} · ${p.cor}${p.modelo ? " · " + p.modelo : ""}`),
+      el("div", { class: "peca-tags" }, el("span", { class: "badge", text: p.ocasiao }), badgeClima(p.clima_ideal)),
+      p.observacoes ? el("span", { class: "peca-obs", text: `"${p.observacoes}"` }) : null),
+    el("div", { class: "peca-acoes" },
+      el("button", { class: "btn secundario pequeno", "data-api": "PATCH /pecas/{id}", onclick: () => mudarEstado(p, novoEstado) },
+        novoEstado === "Suja" ? "Marcar como suja" : "Marcar como limpa"),
+      el("button", { class: "btn fantasma pequeno icone", title: "Editar", "aria-label": "Editar " + p.nome, onclick: () => abrirModalPeca(p) }, icone("i-lapis", 16)),
+      el("button", { class: "btn perigo-contorno pequeno icone", title: "Retirar do armário", "aria-label": "Retirar " + p.nome, onclick: () => abrirRetirar(p) }, icone("i-lixo", 16))));
+}
+
+function renderRetiradas(area, retiradas) {
+  const motivo = document.getElementById("filtro-motivo").value;
+  area.setAttribute("data-api", "GET /pecas/retiradas" + (motivo ? "?motivo=" + motivo : ""));
+  const lista = retiradas.filter(p => !motivo || p.motivo_retirada === motivo).sort((a, b) => b.retirada_em.localeCompare(a.retirada_em));
+  if (!lista.length) {
+    area.append(el("div", { class: "cartao estado-tela" }, el("h3", { text: "Nenhuma peça retirada" }),
+      el("p", { class: "suave", text: "Peças vendidas, doadas ou perdidas aparecem aqui, com o motivo." })));
+    return;
+  }
+  const corpo = el("tbody");
+  for (const p of lista) {
+    corpo.append(el("tr", {},
+      el("td", {}, el("span", { class: "nome-com-amostra" }, amostra(p.cor), p.nome)),
+      el("td", { class: "suave", text: p.tipo }),
+      el("td", {}, el("span", { class: "badge", text: p.motivo_retirada })),
+      el("td", { class: "suave", text: p.observacao_retirada || "—" }),
+      el("td", { class: "suave", text: dataBR(p.retirada_em) })));
+  }
+  area.append(el("div", { class: "cartao tabela-envolve" },
+    el("table", { class: "tabela" },
+      el("thead", {}, el("tr", {}, ...["Peça", "Tipo", "Motivo", "Observação", "Retirada em"].map(t => el("th", { text: t })))),
+      corpo)));
+}
+
+function mudarEstado(p, novo) {
+  p.estado = novo;
+  toast(`${p.nome} marcada como ${novo.toLowerCase()}`);
+  renderArmario();
+}
+
+/* ---------- Modal peça (POST / PUT) ---------- */
+let pecaEditando = null;
+function abrirModalPeca(p = null) {
+  pecaEditando = p;
+  const form = document.getElementById("form-peca");
+  form.reset();
+  limparErros(form);
+  document.getElementById("modal-peca-titulo").textContent = p ? "Editar peça" : "Nova peça";
+  document.getElementById("btn-salvar-peca").textContent = p ? "Salvar alterações" : "Cadastrar peça";
+  form.setAttribute("data-api", p ? "PUT /pecas/" + p.id : "POST /pecas");
+  form.elements.estado.value = "Limpa"; form.elements.clima_ideal.value = "Qualquer";
+  if (p) for (const campo of ["nome", "tipo", "cor", "modelo", "estado", "ocasiao", "clima_ideal", "observacoes"]) form.elements[campo].value = p[campo] || "";
+  form.elements.pode_chuva.checked = p ? p.pode_chuva : false;
+  document.getElementById("modal-peca").showModal();
+}
+function limparErros(form) {
+  form.querySelectorAll(".com-erro").forEach(c => c.classList.remove("com-erro"));
+  form.querySelectorAll(".erro-campo").forEach(e => e.textContent = "");
+}
+function marcarErro(form, nome, msg) {
+  const campo = form.querySelector(`[data-nome="${nome}"]`) || form.elements[nome].closest(".campo");
+  campo.classList.add("com-erro");
+  const e = campo.querySelector(".erro-campo"); if (e) e.textContent = msg;
+}
+document.getElementById("form-peca").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const form = ev.target;
+  limparErros(form);
+  const dados = Object.fromEntries(new FormData(form));
+  dados.pode_chuva = form.elements.pode_chuva.checked;
+  // Simula a resposta 400 com "erros": [{campo, mensagem}]
+  let ok = true;
+  if (!dados.nome.trim()) { marcarErro(form, "nome", "Informe o nome da peça"); ok = false; }
+  if (!dados.cor.trim()) { marcarErro(form, "cor", "Informe a cor"); ok = false; }
+  if (!ok) return;
+  if (pecaEditando) { Object.assign(pecaEditando, dados); toast("Peça atualizada"); }
+  else { estado.pecas.push({ id: estado.proximoId++, ...dados }); toast("Peça cadastrada!"); }
+  document.getElementById("modal-peca").close();
+  if (estado.tela === "armario") renderArmario(); else ir("armario");
+});
+
+/* ---------- Modal retirar (DELETE /pecas/{id}?motivo=) ---------- */
+let pecaRetirando = null, motivoEscolhido = "Doação";
+function renderMotivos() {
+  const area = document.getElementById("chips-motivo");
+  area.replaceChildren();
+  for (const m of MOTIVOS) area.append(el("button", { type: "button", class: "chip", "aria-pressed": String(m === motivoEscolhido),
+    onclick: () => { motivoEscolhido = m; renderMotivos(); } }, m));
+  document.getElementById("campo-observacao").hidden = motivoEscolhido !== "Outro";
+}
+function abrirRetirar(p) {
+  pecaRetirando = p; motivoEscolhido = "Doação";
+  const form = document.getElementById("form-retirar");
+  form.reset(); limparErros(form);
+  form.setAttribute("data-api", `DELETE /pecas/${p.id}?motivo=`);
+  document.getElementById("retirar-nome").textContent = p.nome;
+  renderMotivos();
+  document.getElementById("modal-retirar").showModal();
+}
+document.getElementById("form-retirar").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const form = ev.target; limparErros(form);
+  const obs = form.elements.observacao.value.trim();
+  if (motivoEscolhido === "Outro" && !obs) {
+    const c = document.getElementById("campo-observacao"); c.classList.add("com-erro");
+    c.querySelector(".erro-campo").textContent = "Conte o motivo da retirada"; return;
+  }
+  Object.assign(pecaRetirando, { retirada_em: new Date().toISOString().slice(0, 10), motivo_retirada: motivoEscolhido, observacao_retirada: obs });
+  for (const c of estado.closets) c.pecas_ids = c.pecas_ids.filter(id => id !== pecaRetirando.id);
+  document.getElementById("modal-retirar").close();
+  toast(`${pecaRetirando.nome} retirada do armário`);
+  renderArmario();
+});
+
+/* =========================================================
+   TELA CLOSETS
+   ========================================================= */
+function renderClosets() {
+  const area = document.getElementById("area-closets");
+  area.replaceChildren();
+  if (estado.sim.api === "carregando") {
+    const g = el("div", { class: "grade-closets" });
+    for (let i = 0; i < 2; i++) g.append(el("div", { class: "esqueleto", style: "height:260px;border-radius:12px" }));
+    area.append(g); return;
+  }
+  if (!estado.closets.length) {
+    area.append(el("div", { class: "cartao estado-tela" }, icone("i-cabide", 48),
+      el("h3", { text: "Você ainda não tem closets" }),
+      el("p", { class: "suave", text: "Monte coleções para viagens, trabalho ou estações do ano." }),
+      el("button", { class: "btn", onclick: () => abrirModalCloset() }, icone("i-mais", 18), "Criar closet")));
+    return;
+  }
+  const grade = el("div", { class: "grade-closets" });
+  for (const c of estado.closets) {
+    const pecas = c.pecas_ids.map(id => estado.pecas.find(p => p.id === id)).filter(Boolean);
+    const mosaico = el("div", { class: "closet-mosaico" });
+    for (let i = 0; i < 5; i++) {
+      const p = pecas[i];
+      const quad = el("div", {});
+      if (p) { const { fundo, tinta } = fundoPeca(p.cor); quad.style.background = fundo; quad.style.color = tinta; quad.append(icone(ICONE_TIPO[p.tipo], 22)); quad.title = p.nome; }
+      else { quad.style.border = "1.5px dashed var(--borda)"; }
+      mosaico.append(quad);
+    }
+    grade.append(el("article", { class: "cartao cartao-closet" },
+      mosaico,
+      el("div", {}, el("h3", { text: c.nome }), c.descricao ? el("p", { class: "suave pequeno", style: "margin-top:4px", text: c.descricao }) : null),
+      el("div", { class: "closet-pecas" },
+        pecas.length ? pecas.map(p => el("span", {}, amostra(p.cor), p.nome)) : el("span", { class: "suave", text: "Nenhuma peça" })),
+      el("div", { class: "closet-rodape" },
+        el("span", { class: "suave pequeno", style: "margin-right:auto;align-self:center", text: `${pecas.length} peça${pecas.length === 1 ? "" : "s"}` }),
+        el("button", { class: "btn fantasma pequeno", "data-api": "PUT /closets/{id}", onclick: () => abrirModalCloset(c) }, icone("i-lapis", 16), "Editar"),
+        el("button", { class: "btn perigo-contorno pequeno", "data-api": "DELETE /closets/{id}", onclick: () => apagarCloset(c) }, icone("i-lixo", 16), "Apagar"))));
+  }
+  area.append(grade);
+}
+
+let closetEditando = null;
+function atualizarContagemCloset() {
+  const n = document.querySelectorAll("#closet-pecas input:checked").length;
+  document.getElementById("closet-contagem").textContent = n ? `${n} selecionada${n === 1 ? "" : "s"}` : "Nenhuma selecionada";
+}
+function abrirModalCloset(c = null) {
+  closetEditando = c;
+  const form = document.getElementById("form-closet");
+  form.reset(); limparErros(form);
+  form.setAttribute("data-api", c ? "PUT /closets/" + c.id : "POST /closets");
+  document.getElementById("modal-closet-titulo").textContent = c ? "Editar closet" : "Novo closet";
+  document.getElementById("btn-salvar-closet").textContent = c ? "Salvar alterações" : "Criar closet";
+  if (c) { form.elements.nome.value = c.nome; form.elements.descricao.value = c.descricao || ""; }
+  const area = document.getElementById("closet-pecas");
+  area.replaceChildren();
+  area.setAttribute("data-api", "GET /pecas");
+  const ativas = pecasAtivas();
+  if (!ativas.length) area.append(el("p", { class: "suave pequeno", text: "Cadastre peças no armário para adicioná-las aqui." }));
+  for (const p of ativas) {
+    const caixa = el("input", { type: "checkbox", name: "pecas_ids", value: p.id, onchange: atualizarContagemCloset });
+    if (c && c.pecas_ids.includes(p.id)) caixa.checked = true;
+    area.append(el("label", {}, caixa, amostra(p.cor), el("span", { text: p.nome })));
+  }
+  atualizarContagemCloset();
+  document.getElementById("modal-closet").showModal();
+}
+document.getElementById("form-closet").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const form = ev.target; limparErros(form);
+  const nome = form.elements.nome.value.trim();
+  if (!nome) { marcarErro(form, "nome", "Dê um nome ao closet"); return; }
+  const pecas_ids = new FormData(form).getAll("pecas_ids").map(Number);
+  const descricao = form.elements.descricao.value.trim();
+  if (closetEditando) { Object.assign(closetEditando, { nome, descricao, pecas_ids }); toast("Closet atualizado"); }
+  else { estado.closets.push({ id: estado.proximoId++, nome, descricao, pecas_ids }); toast("Closet criado!"); }
+  document.getElementById("modal-closet").close();
+  renderClosets();
+});
+
+function apagarCloset(c) {
+  const modal = document.getElementById("modal-confirmar");
+  document.getElementById("confirmar-titulo").textContent = `Apagar "${c.nome}"?`;
+  document.getElementById("confirmar-texto").textContent = "O closet será apagado, mas as peças continuam no seu armário.";
+  modal.returnValue = "";
+  modal.showModal();
+  modal.addEventListener("close", function aoFechar() {
+    modal.removeEventListener("close", aoFechar);
+    if (modal.returnValue === "sim") {
+      estado.closets = estado.closets.filter(x => x.id !== c.id);
+      toast("Closet apagado"); renderClosets();
+    }
+  });
+}
+
+/* =========================================================
+   PERFIL (GET / PATCH /auth/eu)
+   ========================================================= */
+function abrirPerfil() {
+  const form = document.getElementById("form-perfil");
+  form.elements.nome.value = estado.usuario.nome;
+  form.elements.email.value = estado.usuario.email;
+  form.elements.cidade.value = estado.usuario.cidade || "";
+  document.getElementById("modal-perfil").showModal();
+}
+document.getElementById("form-perfil").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const f = ev.target;
+  estado.usuario.nome = f.elements.nome.value.trim() || estado.usuario.nome;
+  estado.usuario.cidade = f.elements.cidade.value.trim();
+  estado.cidadeBusca = "";
+  document.getElementById("hoje-cidade").value = "";
+  document.getElementById("modal-perfil").close();
+  atualizarMenu(); toast("Perfil atualizado");
+  if (estado.tela === "hoje") renderHoje();
+});
+
+/* =========================================================
+   TELA ENTRAR
+   ========================================================= */
+document.querySelectorAll("[data-aba]").forEach(aba => aba.addEventListener("click", () => {
+  document.querySelectorAll("[data-aba]").forEach(a => a.setAttribute("aria-selected", String(a === aba)));
+  document.getElementById("form-login").hidden = aba.dataset.aba !== "login";
+  document.getElementById("form-cadastro").hidden = aba.dataset.aba !== "cadastro";
+  document.getElementById("msg-entrar").hidden = true;
+}));
+function msgEntrar(texto, tipo) {
+  const m = document.getElementById("msg-entrar");
+  m.textContent = texto; m.className = "mensagem " + tipo; m.hidden = false;
+}
+document.getElementById("form-login").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const f = new FormData(ev.target);
+  if (!f.get("email") || !f.get("senha")) return msgEntrar("Informe e-mail e senha", "erro");
+  if (estado.sim.api === "401") { estado.sim.api = "ok"; document.getElementById("sim-api").value = "ok"; }
+  entrar();
+});
+document.getElementById("form-cadastro").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const f = new FormData(ev.target);
+  if (!f.get("nome") || !f.get("email")) return msgEntrar("Preencha nome e e-mail", "erro");
+  if ((f.get("senha") || "").length < 6) return msgEntrar("senha: a senha precisa ter pelo menos 6 caracteres", "erro");
+  estado.usuario = { nome: f.get("nome"), email: f.get("email"), cidade: f.get("cidade") || "" };
+  ev.target.reset();
+  document.querySelector('[data-aba="login"]').click();
+  msgEntrar("Conta criada! Agora é só entrar.", "ok");
+});
+
+/* =========================================================
+   LIGAÇÕES GERAIS
+   ========================================================= */
+document.querySelectorAll("[data-ir]").forEach(b => b.addEventListener("click", (ev) => { ev.preventDefault(); ir(b.dataset.ir); }));
+document.getElementById("btn-sair").addEventListener("click", () => sair());
+document.getElementById("btn-perfil").addEventListener("click", abrirPerfil);
+document.getElementById("btn-cidade-menu").addEventListener("click", abrirPerfil);
+document.getElementById("btn-sugerir").addEventListener("click", renderHoje);
+document.getElementById("btn-buscar-cidade").addEventListener("click", () => {
+  estado.cidadeBusca = document.getElementById("hoje-cidade").value.trim(); renderHoje();
+});
+document.getElementById("hoje-cidade").addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") { estado.cidadeBusca = ev.target.value.trim(); renderHoje(); }
+});
+document.getElementById("btn-nova-peca").addEventListener("click", () => abrirModalPeca());
+document.getElementById("btn-novo-closet").addEventListener("click", () => abrirModalCloset());
+document.querySelectorAll("[data-vista]").forEach(b => b.addEventListener("click", () => { estado.vista = b.dataset.vista; renderArmario(); }));
+document.getElementById("agrupar-por").addEventListener("change", renderArmario);
+document.getElementById("filtro-motivo").addEventListener("change", renderArmario);
+const formFiltros = document.getElementById("form-filtros");
+formFiltros.addEventListener("input", renderArmario);
+formFiltros.addEventListener("reset", () => setTimeout(renderArmario));
+formFiltros.addEventListener("submit", ev => ev.preventDefault());
+document.querySelectorAll("[data-fechar]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+
+// Preenche selects a partir dos valores aceitos
+const fp = document.getElementById("form-peca").elements;
+preencherSelect(fp.tipo, TIPOS); preencherSelect(fp.estado, ESTADOS);
+preencherSelect(fp.ocasiao, OCASIOES); preencherSelect(fp.clima_ideal, CLIMAS);
+const ff = formFiltros.elements;
+preencherSelect(ff.tipo, TIPOS, "Todos"); preencherSelect(ff.estado, ESTADOS, "Todos");
+preencherSelect(ff.ocasiao, OCASIOES, "Todas"); preencherSelect(ff.clima_ideal, CLIMAS, "Todos");
+const dl = document.getElementById("lista-cores");
+for (const c of ["branco", "preto", "cinza", "bege", "caramelo", "marrom", "azul", "jeans", "vermelho", "vinho", "rosa", "verde", "amarelo", "laranja", "roxo"]) dl.append(new Option(c));
+
+/* ---------- Painel do protótipo ---------- */
+function rerender() { if (!document.getElementById("area-logada").hidden) ir(estado.tela); }
+document.getElementById("sim-clima").addEventListener("change", (ev) => {
+  estado.usuario.cidade = ev.target.value; estado.cidadeBusca = ""; document.getElementById("hoje-cidade").value = "";
+  atualizarMenu(); rerender();
+});
+document.getElementById("sim-api").addEventListener("change", (ev) => {
+  estado.sim.api = ev.target.value;
+  if (estado.sim.api === "401" && !document.getElementById("area-logada").hidden) {
+    sair("Sua sessão expirou. Entre novamente."); return;
+  }
+  rerender();
+});
+document.getElementById("sim-dados").addEventListener("change", (ev) => {
+  estado.sim.dados = ev.target.value;
+  if (ev.target.value === "vazio") { estado.pecas = []; estado.closets = []; }
+  else { estado.pecas = structuredClone(PECAS_EXEMPLO); estado.closets = structuredClone(CLOSETS_EXEMPLO); }
+  rerender();
+});
+document.getElementById("sim-anotar").addEventListener("change", (ev) => document.body.classList.toggle("anotar", ev.target.checked));
+document.getElementById("sim-tema").addEventListener("change", (ev) => {
+  if (ev.target.value) document.documentElement.setAttribute("data-theme", ev.target.value);
+  else document.documentElement.removeAttribute("data-theme");
+});
+</script>
+</body>
+</html>

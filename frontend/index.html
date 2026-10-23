@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Armário Inteligente - Entrar</title>
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+  <main class="cartao estreito">
+    <h1>Guarda-Roupa Inteligente</h1>
+    <p>O que vestir hoje?</p>
+
+    <form id="form-login">
+      <h2>Entrar</h2>
+      <label>E-mail <input type="email" name="email" required></label>
+      <label>Senha <input type="password" name="senha" required></label>
+      <button type="submit">Entrar</button>
+    </form>
+
+    <form id="form-cadastro">
+      <h2>Criar conta</h2>
+      <label>Nome <input name="nome" required></label>
+      <label>E-mail <input type="email" name="email" required></label>
+      <label>Senha <input type="password" name="senha" minlength="6" required></label>
+      <label>Cidade <input name="cidade" placeholder="Ex.: Curitiba"></label>
+      <button type="submit">Criar conta</button>
+    </form>
+
+    <p id="mensagem" class="mensagem"></p>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+:root {
+  --fundo: #f6f3ef;
+  --cartao: #ffffff;
+  --texto: #2b2b2b;
+  --destaque: #7a4fa0;
+  --perigo: #b3261e;
+  --borda: #e2ddd6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+}
+
+.menu {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 24px;
+  background: var(--cartao);
+  border-bottom: 1px solid var(--borda);
+}
+.menu a { color: var(--destaque); text-decoration: none; font-weight: 600; }
+.menu button { margin-left: auto; }
+
+main { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+.cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 12px; padding: 24px; }
+.estreito { max-width: 420px; }
+
+form { display: grid; gap: 12px; margin-bottom: 24px; }
+label { display: grid; gap: 4px; font-size: 14px; }
+input, select, button { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--borda); }
+button { background: var(--destaque); color: #fff; border: none; cursor: pointer; }
+button.secundario { background: transparent; color: var(--destaque); border: 1px solid var(--destaque); }
+button.perigo { background: var(--perigo); }
+
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.cartao-peca { display: grid; gap: 8px; background: var(--cartao); border: 1px solid var(--borda); border-radius: 12px; padding: 16px; }
+.mensagem { min-height: 1.5em; }
+.mensagem.erro { color: var(--perigo); }
