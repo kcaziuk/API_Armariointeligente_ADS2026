@@ -35,19 +35,33 @@ app.add_middleware(
 )
 
 
+MENSAGENS = {
+    "missing": "Campo obrigatório",
+    "string_too_short": "Texto muito curto",
+    "string_too_long": "Texto muito longo",
+    "string_pattern_mismatch": "Formato inválido",
+    "int_parsing": "Informe um número inteiro",
+    "bool_parsing": "Informe true ou false",
+    "json_invalid": "JSON mal formatado",
+}
+
+
 @app.exception_handler(RequestValidationError)
 async def erro_de_validacao(_: Request, exc: RequestValidationError) -> JSONResponse:
-    erros = [
-        {
-            "campo": ".".join(str(parte) for parte in erro["loc"] if parte not in ("body", "query", "path")),
-            "mensagem": erro["msg"],
-        }
-        for erro in exc.errors()
-    ]
+    erros = []
+    for erro in exc.errors():
+        campo = ".".join(str(parte) for parte in erro["loc"] if parte not in ("body", "query", "path"))
+        if erro["type"] == "enum":
+            mensagem = "Valor não permitido. Use: " + erro["ctx"]["expected"]
+        else:
+            mensagem = MENSAGENS.get(erro["type"], erro["msg"])
+        erros.append({"campo": campo, "mensagem": mensagem})
+
     return JSONResponse(
         status_code=400,
         content={"detail": "Dados inválidos", "erros": erros},
     )
+
 
 
 @app.get("/", tags=["Início"])
