@@ -1,35 +1,322 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Armário Inteligente - Entrar</title>
-  <link rel="stylesheet" href="css/estilo.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Armário Inteligente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
-  <main class="cartao estreito">
-    <h1>Guarda-Roupa Inteligente</h1>
-    <p>O que vestir hoje?</p>
 
-    <form id="form-login">
-      <h2>Entrar</h2>
-      <label>E-mail <input type="email" name="email" required></label>
-      <label>Senha <input type="password" name="senha" required></label>
-      <button type="submit">Entrar</button>
-    </form>
+<!-- Ícones reutilizáveis -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-blusa" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M8.5 3.5 3 6.5l2 4.2 3-1.2v11h8v-11l3 1.2 2-4.2-5.5-3c-.4 1.6-1.8 2.6-3.5 2.6S8.9 5.1 8.5 3.5Z"/></symbol>
+    <symbol id="i-calca" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M6.5 3.5h11l1 17h-4.2L12 10.5l-2.3 10H5.5l1-17Zm0 3h11"/></symbol>
+    <symbol id="i-casaco" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M9 3.5 4 6v14.5h4.5M15 3.5 20 6v14.5h-4.5M9 3.5 12 8l3-4.5M12 8v12.5M8.5 20.5V11M15.5 20.5V11M8.5 20.5h7"/></symbol>
+    <symbol id="i-calcado" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M3 17.5V9.5h4.5l2.5 3 4 1 5.5 1.2c1.2.3 1.5 1.1 1.5 2v.8H3Zm0 2h18M9 12.2l1.2-1.2M11 13l1.2-1.2"/></symbol>
+    <symbol id="i-acessorio" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M5 9h14l-1.2 11.5H6.2L5 9Zm4 0V7a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="i-outro" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10 6a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2v1L21 16.5c.6.4.3 1.5-.5 1.5H3.5c-.8 0-1.1-1.1-.5-1.5L12 10"/></symbol>
+    <symbol id="i-sol" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></g></symbol>
+    <symbol id="i-nuvem" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M7 18.5h10.5a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6-1A4.5 4.5 0 0 0 7 18.5Z"/></symbol>
+    <symbol id="i-chuva" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15h10.5a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6-1A4.5 4.5 0 0 0 7 15Z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/></g></symbol>
+    <symbol id="i-gota" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3s-6 6.7-6 11a6 6 0 0 0 12 0c0-4.3-6-11-6-11Z"/></symbol>
+    <symbol id="i-local" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></g></symbol>
+    <symbol id="i-mais" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-lapis" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4Zm9-13 4 4"/></symbol>
+    <symbol id="i-lixo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></symbol>
+    <symbol id="i-saida" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M5 12h11M12 7l5 5-5 5M5 12"/></symbol>
+    <symbol id="i-embaralhar" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M3 7h3.5c2.5 0 4 1.5 5.5 5s3 5 5.5 5H21m0 0-2.5-2.5M21 17l-2.5 2.5M3 17h3.5c1.2 0 2.2-.4 3-1M21 7h-3.5c-1.2 0-2.2.4-3 1M21 7l-2.5-2.5M21 7l-2.5 2.5"/></symbol>
+    <symbol id="i-alerta" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 4 2.8 19.5h18.4L12 4Z" stroke-linejoin="round"/><path d="M12 10v4.5M12 17v.2"/></g></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-cabide" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M10 6a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2v1L21 16.5c.6.4.3 1.5-.5 1.5H3.5c-.8 0-1.1-1.1-.5-1.5L12 10"/></symbol>
+    <symbol id="i-seta" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m6 15 6-6 6 6"/></symbol>
+  </defs>
+</svg>
 
-    <form id="form-cadastro">
-      <h2>Criar conta</h2>
-      <label>Nome <input name="nome" required></label>
-      <label>E-mail <input type="email" name="email" required></label>
-      <label>Senha <input type="password" name="senha" minlength="6" required></label>
-      <label>Cidade <input name="cidade" placeholder="Ex.: Curitiba"></label>
-      <button type="submit">Criar conta</button>
-    </form>
+<!-- =====================================================
+     TELA 1 — ENTRAR (index.html)
+     ===================================================== -->
+<section id="tela-entrar" class="tela-entrar">
+  <div class="entrar-arte">
+    <div style="position:relative;z-index:1">
+      <div class="marca" style="color:#fff;margin-bottom:40px">
+        <span class="marca-icone" style="background:rgba(255,255,255,.18)"><svg width="20" height="20"><use href="#i-cabide"/></svg></span>
+        <span>Armário Inteligente</span>
+      </div>
+      <h1>O que vestir hoje?</h1>
+      <p>Cadastre suas peças uma vez. Todo dia, o armário consulta o tempo na sua cidade e monta um look com o que está limpo.</p>
+    </div>
+    <svg class="arara" viewBox="0 0 400 260" aria-hidden="true">
+      <path d="M20 30h360" stroke="rgba(255,255,255,.6)" stroke-width="4" stroke-linecap="round"/>
+      <g fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.5">
+        <path d="M80 30v12l-38 22h76z"/><path d="M180 30v12l-38 22h76z"/><path d="M290 30v12l-38 22h76z"/>
+      </g>
+      <path d="M48 64h64l10 30-14 4v120H52V98l-14-4z" fill="#f1eaf7"/>
+      <path d="M146 64h68l4 150h-28l-6-100-6 100h-28z" fill="#4a6a8f"/>
+      <path d="M254 64h72l12 26-12 6v126h-72V96l-12-6z" fill="#d9c7a7"/>
+      <path d="M290 64v158" stroke="rgba(0,0,0,.15)" stroke-width="2"/>
+    </svg>
+    <div class="entrar-passos">
+      <div><b>1</b> Cadastre peças com tipo, cor, ocasião e clima ideal</div>
+      <div><b>2</b> Informe sua cidade</div>
+      <div><b>3</b> Receba o look do dia, pensado para o tempo lá fora</div>
+    </div>
+  </div>
 
-    <p id="mensagem" class="mensagem"></p>
+  <div class="entrar-form">
+    <div class="entrar-cartao">
+      <h2>Bem-vinda de volta</h2>
+      <p class="suave" style="margin-top:6px">Entre ou crie sua conta para acessar seu armário.</p>
+
+      <div class="abas" role="tablist">
+        <button class="aba" role="tab" aria-selected="true" data-aba="login">Entrar</button>
+        <button class="aba" role="tab" aria-selected="false" data-aba="cadastro">Criar conta</button>
+      </div>
+
+      <form id="form-login" class="form-grade" data-api="POST /auth/login" novalidate>
+        <label class="campo">E-mail <input type="email" name="email" autocomplete="email" placeholder="voce@exemplo.com" required></label>
+        <label class="campo">Senha <input type="password" name="senha" autocomplete="current-password" required></label>
+        <button class="btn" type="submit" style="margin-top:6px">Entrar</button>
+      </form>
+
+      <form id="form-cadastro" class="form-grade" data-api="POST /auth/registrar" hidden novalidate>
+        <label class="campo">Nome <input name="nome" autocomplete="name" required></label>
+        <label class="campo">E-mail <input type="email" name="email" autocomplete="email" required></label>
+        <label class="campo">Senha <span class="dica">Mínimo de 8 caracteres</span><input type="password" name="senha" minlength="8" autocomplete="new-password" required></label>
+        <label class="campo">Cidade <span class="dica">Usada para buscar a previsão do tempo. Pode alterar depois.</span><input name="cidade" placeholder="Ex.: Curitiba"></label>
+        <button class="btn" type="submit" style="margin-top:6px">Criar conta</button>
+      </form>
+
+      <p id="msg-entrar" class="mensagem" role="status" hidden style="margin-top:16px"></p>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     ÁREA LOGADA
+     ===================================================== -->
+<div id="area-logada" hidden>
+  <nav class="menu" aria-label="Principal">
+    <a class="marca" href="#" data-ir="hoje">
+      <span class="marca-icone"><svg width="20" height="20"><use href="#i-cabide"/></svg></span>
+      <span>Armário Inteligente</span>
+    </a>
+    <div class="nav">
+      <button class="nav-link" data-ir="hoje">Hoje</button>
+      <button class="nav-link" data-ir="armario">Meu armário</button>
+      <button class="nav-link" data-ir="closets">Closets</button>
+    </div>
+    <div class="menu-direita">
+      <button class="cidade-menu" id="btn-cidade-menu" title="Alterar cidade"><svg width="14" height="14"><use href="#i-local"/></svg><span id="cidade-menu-texto"></span></button>
+      <button class="avatar" id="btn-perfil" title="Meu perfil" data-api="GET /auth/eu"></button>
+      <button class="btn fantasma pequeno" id="btn-sair">Sair</button>
+    </div>
+  </nav>
+
+  <main class="conteudo">
+
+    <!-- ===================== TELA 2 — HOJE ===================== -->
+    <section id="tela-hoje" class="tela">
+      <div class="cabecalho-tela">
+        <div>
+          <p class="suave" id="hoje-data"></p>
+          <h1 id="hoje-saudacao">O que vestir hoje?</h1>
+        </div>
+      </div>
+
+      <div class="hoje-topo">
+        <div id="clima-cartao" class="cartao clima-cartao" data-api="GET /clima"></div>
+
+        <div class="cartao controles">
+          <div>
+            <span class="rotulo">Ocasião</span>
+            <div class="chips" id="chips-ocasiao" role="group" aria-label="Ocasião"></div>
+          </div>
+          <div>
+            <label class="rotulo" for="hoje-cidade">Cidade</label>
+            <div class="linha-cidade">
+              <input id="hoje-cidade" placeholder="Vazio = cidade do cadastro">
+              <button class="btn secundario" id="btn-buscar-cidade">Buscar</button>
+            </div>
+          </div>
+          <button class="btn" id="btn-sugerir"><svg width="18" height="18"><use href="#i-embaralhar"/></svg> Sugerir outro look</button>
+        </div>
+      </div>
+
+      <div class="look-cabecalho">
+        <div>
+          <h2>Look sugerido</h2>
+          <p class="suave pequeno" id="look-resumo"></p>
+        </div>
+      </div>
+      <div id="area-look" data-api="GET /looks/sugestao"></div>
+      <ul class="avisos" id="avisos"></ul>
+    </section>
+
+    <!-- ===================== TELA 3 — MEU ARMÁRIO ===================== -->
+    <section id="tela-armario" class="tela" hidden>
+      <div class="cabecalho-tela">
+        <div>
+          <h1>Meu armário</h1>
+          <p class="suave" id="armario-resumo"></p>
+        </div>
+        <button class="btn" id="btn-nova-peca" data-api="POST /pecas"><svg width="18" height="18"><use href="#i-mais"/></svg> Nova peça</button>
+      </div>
+
+      <div class="barra-vista">
+        <div class="segmentado" role="group" aria-label="Visualização">
+          <button data-vista="ativas" aria-pressed="true">Ativas <span class="contador" id="cont-ativas"></span></button>
+          <button data-vista="agrupadas" aria-pressed="false">Agrupadas</button>
+          <button data-vista="retiradas" aria-pressed="false">Retiradas <span class="contador" id="cont-retiradas"></span></button>
+        </div>
+        <label class="campo" id="campo-agrupar" hidden style="flex-direction:row;display:flex;align-items:center;gap:8px">
+          Agrupar por
+          <select id="agrupar-por" style="width:auto"><option value="tipo">Tipo</option><option value="cor">Cor</option><option value="modelo">Modelo</option></select>
+        </label>
+        <label class="campo" id="campo-motivo" hidden style="flex-direction:row;display:flex;align-items:center;gap:8px">
+          Motivo
+          <select id="filtro-motivo" style="width:auto"><option value="">Todos</option><option>Venda</option><option>Doação</option><option>Perda</option><option>Outro</option></select>
+        </label>
+      </div>
+
+      <form id="form-filtros" class="cartao barra-filtros" data-api="GET /pecas?tipo=&cor=&…">
+        <label class="campo">Tipo<select name="tipo"><option value="">Todos</option></select></label>
+        <label class="campo">Cor<input name="cor" placeholder="Ex.: preto"></label>
+        <label class="campo">Estado<select name="estado"><option value="">Todos</option></select></label>
+        <label class="campo">Ocasião<select name="ocasiao"><option value="">Todas</option></select></label>
+        <label class="campo">Clima ideal<select name="clima_ideal"><option value="">Todos</option></select></label>
+        <button type="reset" class="btn fantasma pequeno">Limpar</button>
+      </form>
+
+      <div id="area-armario"></div>
+    </section>
+
+    <!-- ===================== TELA 4 — CLOSETS ===================== -->
+    <section id="tela-closets" class="tela" hidden>
+      <div class="cabecalho-tela">
+        <div>
+          <h1>Closets</h1>
+          <p class="suave">Agrupe peças em coleções, como "Viagem" ou "Trabalho de inverno". Uma peça pode estar em vários closets.</p>
+        </div>
+        <button class="btn" id="btn-novo-closet" data-api="POST /closets"><svg width="18" height="18"><use href="#i-mais"/></svg> Novo closet</button>
+      </div>
+      <div id="area-closets" data-api="GET /closets"></div>
+    </section>
   </main>
-  <script src="js/api.js"></script>
-  <script src="js/login.js"></script>
+</div>
+
+<!-- =====================================================
+     MODAIS
+     ===================================================== -->
+<dialog id="modal-peca" aria-labelledby="modal-peca-titulo">
+  <form id="form-peca" method="dialog" novalidate>
+    <div class="modal-topo">
+      <div><h2 id="modal-peca-titulo">Nova peça</h2><p class="suave pequeno" id="modal-peca-sub">Os campos com * são obrigatórios.</p></div>
+      <button type="button" class="btn fantasma icone" data-fechar aria-label="Fechar"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <label class="campo" data-nome="nome">Nome *<input name="nome" placeholder="Ex.: Moletom cinza"><span class="erro-campo"></span></label>
+      <div class="duas-colunas">
+        <label class="campo" data-nome="tipo">Tipo *<select name="tipo"></select></label>
+        <label class="campo" data-nome="cor">Cor *<input name="cor" placeholder="Ex.: cinza" list="lista-cores"><span class="erro-campo"></span></label>
+      </div>
+      <div class="duas-colunas">
+        <label class="campo" data-nome="modelo">Modelo<input name="modelo" placeholder="Ex.: canguru"></label>
+        <label class="campo" data-nome="estado">Estado<select name="estado"></select></label>
+      </div>
+      <div class="duas-colunas">
+        <label class="campo" data-nome="ocasiao">Ocasião<select name="ocasiao"></select></label>
+        <label class="campo" data-nome="clima_ideal">Clima ideal<select name="clima_ideal"></select></label>
+      </div>
+      <label class="check"><input type="checkbox" name="pode_chuva"> Pode usar na chuva</label>
+      <label class="campo" data-nome="observacoes">Observações<input name="observacoes" placeholder="Opcional"></label>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn fantasma" data-fechar>Cancelar</button>
+      <button type="submit" class="btn" id="btn-salvar-peca">Cadastrar peça</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="lista-cores"></datalist>
+
+<dialog id="modal-retirar" aria-labelledby="modal-retirar-titulo">
+  <form id="form-retirar" method="dialog" novalidate>
+    <div class="modal-topo">
+      <div><h2 id="modal-retirar-titulo">Retirar do armário</h2><p class="suave pequeno" id="retirar-nome"></p></div>
+      <button type="button" class="btn fantasma icone" data-fechar aria-label="Fechar"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <p class="pequeno suave">A peça sai do armário e das sugestões, mas o registro continua no histórico de retiradas.</p>
+      <div>
+        <span class="campo" style="margin-bottom:8px">Motivo</span>
+        <div class="chips" id="chips-motivo"></div>
+      </div>
+      <label class="campo" id="campo-observacao" hidden>Observação * <span class="dica">Obrigatória quando o motivo é "Outro"</span><textarea name="observacao"></textarea><span class="erro-campo"></span></label>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn fantasma" data-fechar>Cancelar</button>
+      <button type="submit" class="btn perigo">Retirar peça</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="modal-closet" aria-labelledby="modal-closet-titulo">
+  <form id="form-closet" method="dialog" novalidate>
+    <div class="modal-topo">
+      <div><h2 id="modal-closet-titulo">Novo closet</h2></div>
+      <button type="button" class="btn fantasma icone" data-fechar aria-label="Fechar"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <label class="campo" data-nome="nome">Nome *<input name="nome" placeholder="Ex.: Viagem para a serra"><span class="erro-campo"></span></label>
+      <label class="campo">Descrição<input name="descricao" placeholder="Opcional"></label>
+      <div class="campo">Peças <span class="dica" id="closet-contagem">Nenhuma selecionada</span></div>
+      <div class="lista-check" id="closet-pecas"></div>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn fantasma" data-fechar>Cancelar</button>
+      <button type="submit" class="btn" id="btn-salvar-closet">Criar closet</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="modal-confirmar" aria-labelledby="confirmar-titulo">
+  <form method="dialog">
+    <div class="modal-topo"><h2 id="confirmar-titulo"></h2></div>
+    <div class="modal-corpo"><p id="confirmar-texto" class="suave"></p></div>
+    <div class="modal-rodape">
+      <button value="nao" class="btn fantasma">Cancelar</button>
+      <button value="sim" class="btn perigo" id="confirmar-ok">Apagar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="modal-perfil" aria-labelledby="perfil-titulo">
+  <form id="form-perfil" method="dialog" novalidate data-api="PATCH /auth/eu">
+    <div class="modal-topo">
+      <div><h2 id="perfil-titulo">Meu perfil</h2></div>
+      <button type="button" class="btn fantasma icone" data-fechar aria-label="Fechar"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <label class="campo">Nome<input name="nome"></label>
+      <label class="campo">E-mail <span class="dica">Não pode ser alterado</span><input name="email" disabled></label>
+      <label class="campo">Cidade <span class="dica">Usada na previsão do tempo da tela Hoje</span><input name="cidade"></label>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn fantasma" data-fechar>Cancelar</button>
+      <button type="submit" class="btn">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
