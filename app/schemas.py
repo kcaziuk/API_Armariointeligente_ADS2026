@@ -192,3 +192,18 @@ class UsuarioResposta(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class ClimaResposta(BaseModel):
+    cidade: str
+    temperatura: float
+    sensacao: float
+    descricao: str
+    chuva: bool
+    clima: ClimaIdeal
+
+
+class LookResposta(BaseModel):
+    clima: ClimaResposta
+    look: dict[str, Optional[PecaResposta]]
+    avisos: list[str]
