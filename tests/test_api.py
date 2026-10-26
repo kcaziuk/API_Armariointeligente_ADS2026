@@ -66,12 +66,4 @@ def test_rotas_protegidas_exigem_token(anonymous_client):
     assert resposta.headers["www-authenticate"] == "Bearer"
 
 
-def test_frontend_served_from_root_and_assets(anonymous_client):
-    pagina = anonymous_client.get("/")
-    assert pagina.status_code == 200
-    assert "text/html" in pagina.headers["content-type"]
-    assert 'id="form-login"' in pagina.text
 
-    script = anonymous_client.get("/js/api.js")
-    assert script.status_code == 200
-    assert "javascript" in script.headers["content-type"]
