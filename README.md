@@ -87,6 +87,22 @@ python -m uvicorn app.main:app --reload
 | http://127.0.0.1:8000/docs | Documentação interativa (Swagger) |
 | http://127.0.0.1:8000/redoc | Documentação alternativa (ReDoc) |
 
+## Front-end
+
+O front-end fica na pasta `frontend/` (HTML, CSS e JavaScript, sem framework) e conversa com a API pelo navegador. Ele roda em outra porta (5500), e por isso a API libera essa origem no CORS.
+
+1. Com a API ligada, abra um segundo terminal na pasta do projeto e rode:
+   ```powershell
+   cd frontend
+   python -m http.server 5500 --bind 127.0.0.1
+   ```
+   Ou, no VS Code, clique com o botão direito em `frontend/index.html` → **Open with Live Server**.
+2. Acesse http://127.0.0.1:5500 (pelo Live Server: http://127.0.0.1:5500/frontend/index.html).
+3. Crie uma conta ou entre. Telas: **Hoje** (clima e look do dia), **Meu armário** (peças, filtros, retiradas), **Closets** e **Perfil** (nome e cidade).
+
+Não abra o `index.html` com dois cliques: o endereço vira `file://`, que não está liberado no CORS, e o navegador bloqueia as chamadas.
+
+
 ## Como testar a autenticação
 
 1. Abra o Swagger em `/docs`.
@@ -203,6 +219,12 @@ app/
     clima.py           clima e sugestão de look
   services/
     openweather.py     integração com o OpenWeatherMap
+frontend/
+  index.html           telas: entrar, hoje, armário e closets
+  css/estilo.css       visual
+  js/api.js            conversa com a API (token, JSON e erros)
+  js/app.js            comportamento das telas
+
 tests/                 testes automatizados (pytest)
 .env.example           modelo das variáveis de ambiente
 requirements.txt       dependências
