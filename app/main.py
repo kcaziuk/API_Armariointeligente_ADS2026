@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.database import iniciar_banco
-from app.routers import auth, closets, pecas
+from app.routers import auth, clima, closets, pecas
 from app.security import obter_chave_secreta
 
 
@@ -75,3 +75,4 @@ def inicio(request: Request):
 app.include_router(pecas.router)
 app.include_router(closets.router)
 app.include_router(auth.router)
+app.include_router(clima.router)
