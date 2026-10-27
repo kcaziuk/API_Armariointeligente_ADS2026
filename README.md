@@ -1,4 +1,4 @@
-# Armário Inteligente — API "O que vestir hoje?"
+# Armário Inteligente | API "O que vestir hoje?"
 
 API REST para organizar o guarda-roupa e sugerir o look do dia com base no clima. A pessoa cadastra suas peças (tipo, cor, ocasião, clima ideal), marca o que está sujo ou precisando de conserto (botão solto, zíper quebrado), organiza closets e, todos os dias, a API consulta a previsão do tempo da cidade dela no OpenWeatherMap e monta um look só com peças limpas e adequadas à temperatura e à chuva.
 
